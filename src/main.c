@@ -2,6 +2,7 @@
 #include <ncurses.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
 
@@ -37,13 +38,12 @@ bool check_move_validity(int ax, int ay, int bx, int by);
 void initialize_board();
 void draw();
 
-// TODO
-void validate_pawn(int ax, int ay, int bx, int by);
-void validate_king(int ax, int ay, int bx, int by);
-void validate_queen(int ax, int ay, int bx, int by);
-void validate_rook(int ax, int ay, int bx, int by);
-void validate_bishop(int ax, int ay, int bx, int by);
-void validate_knight(int ax, int ay, int bx, int by);
+bool validate_pawn(int ax, int ay, int bx, int by);
+bool validate_king(int ax, int ay, int bx, int by);
+bool validate_queen(int ax, int ay, int bx, int by);
+bool validate_rook(int ax, int ay, int bx, int by);
+bool validate_bishop(int ax, int ay, int bx, int by);
+bool validate_knight(int ax, int ay, int bx, int by);
 
 int main() {
   setlocale(LC_ALL, "");
@@ -51,8 +51,14 @@ int main() {
   noecho();
   raw();
   keypad(stdscr, TRUE);
-  getmaxyx(stdscr, rows, cols);
   initialize_board();
+
+  getmaxyx(stdscr, rows, cols);
+  if (cols < WIDTH + 6 || rows < HEIGHT + 6) {
+    endwin();
+    printf("Your terminal too little. Minimum size is %dx%d\n", WIDTH + 6, HEIGHT + 6);
+    exit(1);
+  }
 
   do {
     draw();
@@ -92,17 +98,39 @@ int main() {
 
     board[by][bx] = board[ay][ax];
     board[ay][ax] = (struct Piece){EMPTY, WHITE};
+    turn = turn == WHITE ? BLACK : WHITE;
   } while (TRUE);
 
   endwin();
 }
 
 bool check_move_validity(int ax, int ay, int bx, int by) {
-  if ((ay < 0 || ay >= HEIGHT) || (by < 0 || by >= HEIGHT) ||
-      (ax < 0 || ax >= WIDTH) || (bx < 0 || bx >= WIDTH)) {
+  if ((ay < 0 || ay >= HEIGHT) || (by < 0 || by >= HEIGHT) || (ax < 0 || ax >= WIDTH) || (bx < 0 || bx >= WIDTH)) {
     return false;
   }
-  return true;
+
+  struct Piece piece = board[ay][ax];
+  if (piece.type == EMPTY || piece.color != turn) {
+    return false;
+  }
+  if (ax == bx && ay == by) {
+    return false;
+  }
+
+  if (piece.type == PAWN) {
+    return validate_pawn(ax, ay, bx, by);
+  } else if (piece.type == KING) {
+    return validate_king(ax, ay, bx, by);
+  } else if (piece.type == QUEEN) {
+    return validate_queen(ax, ay, bx, by);
+  } else if (piece.type == ROOK) {
+    return validate_rook(ax, ay, bx, by);
+  } else if (piece.type == BISHOP) {
+    return validate_bishop(ax, ay, bx, by);
+  } else if (piece.type == KNIGHT) {
+    return validate_knight(ax, ay, bx, by);
+  }
+  return false;
 };
 
 void draw() {
@@ -154,3 +182,21 @@ void initialize_board() {
   board[HEIGHT - 1][3] = (struct Piece){QUEEN, WHITE};
   board[HEIGHT - 1][4] = (struct Piece){KING, WHITE};
 };
+
+bool validate_pawn(int ax, int ay, int bx, int by) { return true; };
+
+bool validate_king(int ax, int ay, int bx, int by) {
+  struct Piece victim = board[by][bx];
+  if (victim.type != EMPTY && victim.color == turn) {
+    return false;
+  }
+  if (abs(ax - bx) > 1 || abs(ay - by) > 1) {
+    return false;
+  }
+  return true;
+};
+
+bool validate_queen(int ax, int ay, int bx, int by) { return true; };
+bool validate_rook(int ax, int ay, int bx, int by) { return true; };
+bool validate_bishop(int ax, int ay, int bx, int by) { return true; };
+bool validate_knight(int ax, int ay, int bx, int by) { return true; };
