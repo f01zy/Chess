@@ -1,0 +1,5 @@
+BasedOnStyle: LLVM
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
