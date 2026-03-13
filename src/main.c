@@ -1,3 +1,8 @@
+/*
+ * TODO
+ * 1. fix is_check method.
+ */
+
 #include <locale.h>
 #include <ncurses.h>
 #include <stdbool.h>
@@ -33,9 +38,15 @@ struct Piece board[8][8];
 enum Color turn = WHITE;
 int rows, cols;
 
-bool check_move_validity(int ax, int ay, int bx, int by);
+void get_king_position(int *x, int *y);
 void initialize_board();
 void draw();
+void initialize_colors();
+
+bool is_attacked(int x, int y);
+bool is_check();
+bool is_checkmate();
+bool check_move_validity(int ax, int ay, int bx, int by);
 
 bool validate_pawn(int ax, int ay, int bx, int by);
 bool validate_king(int ax, int ay, int bx, int by);
@@ -50,6 +61,7 @@ int main() {
   noecho();
   raw();
   keypad(stdscr, TRUE);
+  initialize_colors();
   initialize_board();
 
   getmaxyx(stdscr, rows, cols);
@@ -66,6 +78,14 @@ int main() {
     int fromY, toY;
     int x = cols / 2 - 8;
     int y = rows / 2 + 6;
+
+    if (is_checkmate()) {
+      mvprintw(y++, x, "%s lose", turn == WHITE ? "White" : "Black");
+      refresh();
+      getch();
+      break;
+    }
+
     mvprintw(y++, x, "Coordinates: ");
     refresh();
 
@@ -103,30 +123,48 @@ int main() {
   endwin();
 }
 
+void initialize_colors() {
+  if (has_colors() == FALSE) {
+    endwin();
+    printf("Your terminal does not support color\n");
+    exit(1);
+  }
+  start_color();
+
+  // Default
+  init_pair(0, COLOR_WHITE, COLOR_BLACK);
+  // Check
+  init_pair(1, COLOR_WHITE, COLOR_RED);
+}
+
 bool check_move_validity(int ax, int ay, int bx, int by) {
-  if ((ay < 0 || ay >= 8) || (by < 0 || by >= 8) || (ax < 0 || ax >= 8) || (bx < 0 || bx >= 8)) {
+  if ((ay < 0 || ay > 7) || (by < 0 || by > 7) || (ax < 0 || ax > 7) || (bx < 0 || bx > 7)) {
     return false;
   }
 
-  struct Piece piece = board[ay][ax];
-  if (piece.type == EMPTY || piece.color != turn) {
+  const struct Piece *piece = &board[ay][ax];
+  const struct Piece *victim = &board[by][bx];
+  if (piece->type == EMPTY || piece->color != turn || (victim->type != EMPTY && victim->color == turn)) {
+    return false;
+  }
+  if (is_check() && piece->type != KING) {
     return false;
   }
   if (ax == bx && ay == by) {
     return false;
   }
 
-  if (piece.type == PAWN) {
+  if (piece->type == PAWN) {
     return validate_pawn(ax, ay, bx, by);
-  } else if (piece.type == KING) {
-    return validate_king(ax, ay, bx, by);
-  } else if (piece.type == QUEEN) {
+  } else if (piece->type == KING) {
+    return validate_king(ax, ay, bx, by) && !is_attacked(bx, by);
+  } else if (piece->type == QUEEN) {
     return validate_queen(ax, ay, bx, by);
-  } else if (piece.type == ROOK) {
+  } else if (piece->type == ROOK) {
     return validate_rook(ax, ay, bx, by);
-  } else if (piece.type == BISHOP) {
+  } else if (piece->type == BISHOP) {
     return validate_bishop(ax, ay, bx, by);
-  } else if (piece.type == KNIGHT) {
+  } else if (piece->type == KNIGHT) {
     return validate_knight(ax, ay, bx, by);
   }
   return false;
@@ -138,6 +176,7 @@ void draw() {
     for (int j = 0; j < 8; j++) {
       struct Piece *piece = &board[i][j];
       wchar_t ch = ' ';
+      int color = 0;
 
       if (piece->type == PAWN) {
         ch = piece->color == WHITE ? WHITE_PAWN : BLACK_PAWN;
@@ -153,9 +192,15 @@ void draw() {
         ch = piece->color == WHITE ? WHITE_KNIGHT : BLACK_KNIGHT;
       }
 
+      if (is_check()) {
+        color = 1;
+      }
+
       int x = cols / 2 - 8 + j * 2;
       int y = rows / 2 - 4 + i;
+      attron(COLOR_PAIR(color));
       mvprintw(y, x, "%lc", ch);
+      attroff(COLOR_PAIR(color));
       i == 7 && mvprintw(y + 1, x, "%c", 'a' + j);
       j == 0 && mvprintw(y, x - 1, "%d", 8 - i);
     }
@@ -182,9 +227,7 @@ void initialize_board() {
   board[7][4] = (struct Piece){KING, WHITE};
 };
 
-// TODO
 bool validate_pawn(int ax, int ay, int bx, int by) {
-  int dirX = ax == bx ? 0 : ax > bx ? -1 : 1;
   int dirY = ay == by ? 0 : ay > by ? -1 : 1;
   int moveX = abs(ax - bx);
   int moveY = abs(ay - by);
@@ -196,7 +239,9 @@ bool validate_pawn(int ax, int ay, int bx, int by) {
   if (moveY > max_advence || moveX > 1) {
     return false;
   }
-  if (moveY == 2 && moveX == 1) {
+
+  const struct Piece *nextPiece = &board[ay + dirY][ax];
+  if (moveY == 2 && (moveX == 1 || nextPiece->type != EMPTY)) {
     return false;
   }
 
@@ -276,3 +321,49 @@ bool validate_knight(int ax, int ay, int bx, int by) {
   }
   return true;
 };
+
+void get_king_position(int *x, int *y) {
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) {
+      const struct Piece *piece = &board[i][j];
+      if (piece->type == KING && piece->color == turn) {
+        *y = i;
+        *x = j;
+        return;
+      }
+    }
+  }
+}
+
+bool is_attacked(int x, int y) {
+  if (x < 0 || x > 7 || y < 0 || y > 8) {
+    return false;
+  }
+
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) {
+      const struct Piece *piece = &board[i][j];
+      if ((i == y && j == x) || piece->color == turn) {
+        continue;
+      }
+      if (check_move_validity(j, i, x, y)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+bool is_check() {
+  int x, y;
+  get_king_position(&x, &y);
+  return is_attacked(x, y);
+}
+
+bool is_checkmate() {
+  int x, y;
+  get_king_position(&x, &y);
+  return is_attacked(x - 1, y) || is_attacked(x + 1, y) || is_attacked(x, y - 1) || is_attacked(x, y + 1) || is_attacked(x - 1, y - 1) ||
+         is_attacked(x + 1, y + 1) || is_attacked(x - 1, y + 1) || is_attacked(x + 1, y - 1);
+}
