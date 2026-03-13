@@ -4,10 +4,9 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <wchar.h>
 
-#define WIDTH        8
-#define HEIGHT       8
+#define MIN_WIDTH    14
+#define MIN_HEIGHT   14
 #define ESCAPE       27
 #define WHITE_PAWN   L'\u2659'
 #define WHITE_KING   L'\u2654'
@@ -30,7 +29,7 @@ struct Piece {
   enum Color color;
 };
 
-struct Piece board[HEIGHT][WIDTH];
+struct Piece board[8][8];
 enum Color turn = WHITE;
 int rows, cols;
 
@@ -54,9 +53,9 @@ int main() {
   initialize_board();
 
   getmaxyx(stdscr, rows, cols);
-  if (cols < WIDTH + 6 || rows < HEIGHT + 6) {
+  if (cols < MIN_WIDTH || rows < MIN_HEIGHT) {
     endwin();
-    printf("Your terminal too little. Minimum size is %dx%d\n", WIDTH + 6, HEIGHT + 6);
+    printf("Your terminal too little. Minimum size is %dx%d\n", MIN_WIDTH, MIN_HEIGHT);
     exit(1);
   }
 
@@ -66,7 +65,7 @@ int main() {
     char fromX, toX;
     int fromY, toY;
     int x = cols / 2 - 8;
-    int y = rows / 2 + HEIGHT / 2 + 2;
+    int y = rows / 2 + 6;
     mvprintw(y++, x, "Coordinates: ");
     refresh();
 
@@ -86,9 +85,9 @@ int main() {
     sscanf(buffer, "%c%d-%c%d", &fromX, &fromY, &toX, &toY);
 
     int ax = fromX - 'a';
-    int ay = HEIGHT - fromY;
+    int ay = 8 - fromY;
     int bx = toX - 'a';
-    int by = HEIGHT - toY;
+    int by = 8 - toY;
 
     if (!check_move_validity(ax, ay, bx, by)) {
       mvprintw(y++, x, "The move is incorrent\n");
@@ -105,7 +104,7 @@ int main() {
 }
 
 bool check_move_validity(int ax, int ay, int bx, int by) {
-  if ((ay < 0 || ay >= HEIGHT) || (by < 0 || by >= HEIGHT) || (ax < 0 || ax >= WIDTH) || (bx < 0 || bx >= WIDTH)) {
+  if ((ay < 0 || ay >= 8) || (by < 0 || by >= 8) || (ax < 0 || ax >= 8) || (bx < 0 || bx >= 8)) {
     return false;
   }
 
@@ -135,8 +134,8 @@ bool check_move_validity(int ax, int ay, int bx, int by) {
 
 void draw() {
   clear();
-  for (int i = 0; i < HEIGHT; i++) {
-    for (int j = 0; j < WIDTH; j++) {
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) {
       struct Piece *piece = &board[i][j];
       wchar_t ch = ' ';
 
@@ -154,20 +153,20 @@ void draw() {
         ch = piece->color == WHITE ? WHITE_KNIGHT : BLACK_KNIGHT;
       }
 
-      int x = cols / 2 - WIDTH + j * 2;
-      int y = rows / 2 - HEIGHT / 2 + i;
+      int x = cols / 2 - 8 + j * 2;
+      int y = rows / 2 - 4 + i;
       mvprintw(y, x, "%lc", ch);
-      i == HEIGHT - 1 && mvprintw(y + 1, x, "%c", 'a' + j);
-      j == 0 && mvprintw(y, x - 1, "%d", WIDTH - i);
+      i == 7 && mvprintw(y + 1, x, "%c", 'a' + j);
+      j == 0 && mvprintw(y, x - 1, "%d", 8 - i);
     }
   }
   refresh();
 }
 
 void initialize_board() {
-  for (int i = 0; i < WIDTH; i++) {
+  for (int i = 0; i < 8; i++) {
     board[1][i] = (struct Piece){PAWN, BLACK};
-    board[HEIGHT - 2][i] = (struct Piece){PAWN, WHITE};
+    board[6][i] = (struct Piece){PAWN, WHITE};
   }
 
   board[0][0] = board[0][7] = (struct Piece){ROOK, BLACK};
@@ -176,18 +175,42 @@ void initialize_board() {
   board[0][3] = (struct Piece){QUEEN, BLACK};
   board[0][4] = (struct Piece){KING, BLACK};
 
-  board[HEIGHT - 1][0] = board[HEIGHT - 1][7] = (struct Piece){ROOK, WHITE};
-  board[HEIGHT - 1][1] = board[HEIGHT - 1][6] = (struct Piece){KNIGHT, WHITE};
-  board[HEIGHT - 1][2] = board[HEIGHT - 1][5] = (struct Piece){BISHOP, WHITE};
-  board[HEIGHT - 1][3] = (struct Piece){QUEEN, WHITE};
-  board[HEIGHT - 1][4] = (struct Piece){KING, WHITE};
+  board[7][0] = board[7][7] = (struct Piece){ROOK, WHITE};
+  board[7][1] = board[7][6] = (struct Piece){KNIGHT, WHITE};
+  board[7][2] = board[7][5] = (struct Piece){BISHOP, WHITE};
+  board[7][3] = (struct Piece){QUEEN, WHITE};
+  board[7][4] = (struct Piece){KING, WHITE};
 };
 
-bool validate_pawn(int ax, int ay, int bx, int by) { return true; };
+// TODO
+bool validate_pawn(int ax, int ay, int bx, int by) {
+  int dirX = ax == bx ? 0 : ax > bx ? -1 : 1;
+  int dirY = ay == by ? 0 : ay > by ? -1 : 1;
+  int moveX = abs(ax - bx);
+  int moveY = abs(ay - by);
+  int max_advence = (ay == 1 || ay == 6) ? 2 : 1;
+
+  if ((dirY == 1 && turn == WHITE) || (dirY == -1 && turn == BLACK)) {
+    return false;
+  }
+  if (moveY > max_advence || moveX > 1) {
+    return false;
+  }
+  if (moveY == 2 && moveX == 1) {
+    return false;
+  }
+
+  const struct Piece *victim = &board[by][bx];
+  if ((moveX == 0 && victim->type != EMPTY) || (moveX == 1 && victim->type == EMPTY)) {
+    return false;
+  }
+
+  return true;
+};
 
 bool validate_king(int ax, int ay, int bx, int by) {
-  struct Piece victim = board[by][bx];
-  if (victim.type != EMPTY && victim.color == turn) {
+  const struct Piece *victim = &board[by][bx];
+  if (victim->type != EMPTY && victim->color == turn) {
     return false;
   }
   if (abs(ax - bx) > 1 || abs(ay - by) > 1) {
@@ -196,7 +219,60 @@ bool validate_king(int ax, int ay, int bx, int by) {
   return true;
 };
 
-bool validate_queen(int ax, int ay, int bx, int by) { return true; };
-bool validate_rook(int ax, int ay, int bx, int by) { return true; };
-bool validate_bishop(int ax, int ay, int bx, int by) { return true; };
-bool validate_knight(int ax, int ay, int bx, int by) { return true; };
+bool validate_queen(int ax, int ay, int bx, int by) { return validate_rook(ax, ay, bx, by) || validate_bishop(ax, ay, bx, by); };
+
+bool validate_rook(int ax, int ay, int bx, int by) {
+  int dirX = ax == bx ? 0 : ax > bx ? -1 : 1;
+  int dirY = ay == by ? 0 : ay > by ? -1 : 1;
+  if (abs(dirX) + abs(dirY) != 1) {
+    return false;
+  }
+
+  int i = ay, j = ax;
+  while (1) {
+    i += dirY;
+    j += dirX;
+    if (i == by && j == bx) {
+      break;
+    }
+    if (board[i][j].type != EMPTY) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+bool validate_bishop(int ax, int ay, int bx, int by) {
+  int dirX = ax > bx ? -1 : 1;
+  int dirY = ay > by ? -1 : 1;
+
+  int moveX = abs(ax - bx);
+  int moveY = abs(ay - by);
+  if (moveX != moveY) {
+    return false;
+  }
+
+  int i = ay, j = ax;
+  while (1) {
+    i += dirY;
+    j += dirX;
+    if (i == by && j == bx) {
+      break;
+    }
+    if (board[i][j].type != EMPTY) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+bool validate_knight(int ax, int ay, int bx, int by) {
+  int moveX = abs(ax - bx);
+  int moveY = abs(ay - by);
+  if (!(moveX == 1 && moveY == 2) && !(moveX == 2 && moveY == 1)) {
+    return false;
+  }
+  return true;
+};
