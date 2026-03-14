@@ -1,8 +1,9 @@
 /*
  * TODO
- * 1. Пофиксить code dumped в is_checkmate.
- * 2. Добавить отдельную структуру координат, чтобы избежать дублирования.
- * 3. Убрать turn от туда, где он не нужен.
+ * 1. Почистить ход.
+ * 2. Реализовать взятие на проходе.
+ * 3. Реализовать рокировку.
+ * 4. Потестить.
  */
 
 #include <locale.h>
@@ -35,6 +36,13 @@ struct Piece {
   enum Color color;
 };
 
+struct Move {
+  int ax;
+  int ay;
+  int bx;
+  int by;
+};
+
 struct Piece board[8][8];
 enum Color turn = WHITE;
 int rows, cols;
@@ -43,19 +51,20 @@ void get_king_position(int *x, int *y);
 void initialize_board();
 void draw();
 void initialize_colors();
+void move_struct_to_number(const struct Move *move, int *ax, int *ay, int *bx, int *by);
 
-bool is_attacked(struct Piece board[8][8], enum Color turn, int x, int y);
-bool is_check(struct Piece board[8][8], enum Color turn);
+bool is_attacked(enum Color turn, int x, int y);
+bool is_check();
 bool is_checkmate();
-bool check_queue(struct Piece board[8][8], enum Color turn, int ax, int ay, int bx, int by);
-bool check_move_validity(struct Piece board[8][8], enum Color turn, int ax, int ay, int bx, int by);
+bool check_move_validity(enum Color turn, struct Move move);
+bool check_turn(struct Move move, enum Color turn);
 
-bool validate_pawn(struct Piece board[8][8], enum Color turn, int ax, int ay, int bx, int by);
-bool validate_king(struct Piece board[8][8], enum Color turn, int ax, int ay, int bx, int by);
-bool validate_queen(struct Piece board[8][8], enum Color turn, int ax, int ay, int bx, int by);
-bool validate_rook(struct Piece board[8][8], enum Color turn, int ax, int ay, int bx, int by);
-bool validate_bishop(struct Piece board[8][8], enum Color turn, int ax, int ay, int bx, int by);
-bool validate_knight(struct Piece board[8][8], enum Color turn, int ax, int ay, int bx, int by);
+bool validate_pawn(enum Color turn, struct Move move);
+bool validate_king(struct Move move);
+bool validate_queen(struct Move move);
+bool validate_rook(struct Move move);
+bool validate_bishop(struct Move move);
+bool validate_knight(struct Move move);
 
 int main() {
   setlocale(LC_ALL, "");
@@ -80,7 +89,7 @@ int main() {
     int x = cols / 2 - 8;
     int y = rows / 2 + 6;
 
-    if (is_check(board, turn) && is_checkmate()) {
+    if (is_check() && is_checkmate()) {
       mvprintw(y++, x, "%s lose", turn == WHITE ? "White" : "Black");
       refresh();
       getch();
@@ -109,13 +118,8 @@ int main() {
     int bx = toX - 'a';
     int by = 8 - toY;
 
-    if (!check_queue(board, turn, ax, ay, bx, by)) {
-      mvprintw(y++, x, "You're in check\n");
-      getch();
-      continue;
-    }
-
-    if (!check_move_validity(board, turn, ax, ay, bx, by)) {
+    struct Move move = {ax, ay, bx, by};
+    if (!check_turn(move, turn) || !check_move_validity(turn, move)) {
       mvprintw(y++, x, "The move is incorrent\n");
       getch();
       continue;
@@ -129,6 +133,13 @@ int main() {
   endwin();
 }
 
+void move_struct_to_number(const struct Move *move, int *ax, int *ay, int *bx, int *by) {
+  *ax = move->ax;
+  *ay = move->ay;
+  *bx = move->bx;
+  *by = move->by;
+};
+
 void initialize_colors() {
   if (has_colors() == FALSE) {
     endwin();
@@ -136,23 +147,24 @@ void initialize_colors() {
     exit(1);
   }
   start_color();
-
   init_pair(0, COLOR_WHITE, COLOR_BLACK);
   init_pair(1, COLOR_WHITE, COLOR_RED);
 }
 
-bool check_queue(struct Piece board[8][8], enum Color turn, int ax, int ay, int bx, int by) {
+bool check_turn(struct Move move, enum Color turn) {
+  int ax, ay, bx, by;
+  move_struct_to_number(&move, &ax, &ay, &bx, &by);
   const struct Piece *piece = &board[ay][ax];
   const struct Piece *victim = &board[by][bx];
-
-  if (piece->color != turn || (piece->type != KING && is_check(board, turn)) || (victim->type != EMPTY && victim->color == turn)) {
+  if (piece->color != turn || (victim->type != EMPTY && victim->color == turn)) {
     return false;
   }
-
   return true;
 }
 
-bool check_move_validity(struct Piece board[8][8], enum Color turn, int ax, int ay, int bx, int by) {
+bool check_move_validity(enum Color turn, struct Move move) {
+  int ax, ay, bx, by;
+  move_struct_to_number(&move, &ax, &ay, &bx, &by);
   if ((ay < 0 || ay > 7) || (by < 0 || by > 7) || (ax < 0 || ax > 7) || (bx < 0 || bx > 7) || (ax == bx && ay == by)) {
     return false;
   }
@@ -160,12 +172,12 @@ bool check_move_validity(struct Piece board[8][8], enum Color turn, int ax, int 
 
   // clang-format off
   switch (piece->type) {
-    case PAWN:   return validate_pawn  (board, turn, ax, ay, bx, by);
-    case KING:   return validate_king  (board, turn, ax, ay, bx, by) && !is_attacked(board, turn, bx, by);
-    case QUEEN:  return validate_queen (board, turn, ax, ay, bx, by);
-    case ROOK:   return validate_rook  (board, turn, ax, ay, bx, by);
-    case BISHOP: return validate_bishop(board, turn, ax, ay, bx, by);
-    case KNIGHT: return validate_knight(board, turn, ax, ay, bx, by);
+    case PAWN:   return validate_pawn  (turn, move);
+    case KING:   return validate_king  (move) && !is_attacked(turn, bx, by);
+    case QUEEN:  return validate_queen (move);
+    case ROOK:   return validate_rook  (move);
+    case BISHOP: return validate_bishop(move);
+    case KNIGHT: return validate_knight(move);
     default:     return false;
   }
   // clang-format on
@@ -179,7 +191,7 @@ void draw() {
     for (int j = 0; j < 8; j++) {
       struct Piece *piece = &board[i][j];
       wchar_t ch = ' ';
-      int color = (piece->type == KING && piece->color == turn && is_check(board, turn)) ? 1 : 0;
+      int color = (piece->type == KING && piece->color == turn && is_check()) ? 1 : 0;
 
       // clang-format off
       switch (piece->type) {
@@ -222,7 +234,9 @@ void initialize_board() {
   board[7][4] = (struct Piece){KING, WHITE};
 };
 
-bool validate_pawn(struct Piece board[8][8], enum Color turn, int ax, int ay, int bx, int by) {
+bool validate_pawn(enum Color turn, struct Move move) {
+  int ax, ay, bx, by;
+  move_struct_to_number(&move, &ax, &ay, &bx, &by);
   int dirY = ay == by ? 0 : ay > by ? -1 : 1;
   int moveX = abs(ax - bx);
   int moveY = abs(ay - by);
@@ -248,7 +262,9 @@ bool validate_pawn(struct Piece board[8][8], enum Color turn, int ax, int ay, in
   return true;
 };
 
-bool validate_king(struct Piece board[8][8], enum Color turn, int ax, int ay, int bx, int by) {
+bool validate_king(struct Move move) {
+  int ax, ay, bx, by;
+  move_struct_to_number(&move, &ax, &ay, &bx, &by);
   const struct Piece *victim = &board[by][bx];
   if (victim->type != EMPTY && victim->color == turn) {
     return false;
@@ -259,11 +275,11 @@ bool validate_king(struct Piece board[8][8], enum Color turn, int ax, int ay, in
   return true;
 };
 
-bool validate_queen(struct Piece board[8][8], enum Color turn, int ax, int ay, int bx, int by) {
-  return validate_rook(board, turn, ax, ay, bx, by) || validate_bishop(board, turn, ax, ay, bx, by);
-};
+bool validate_queen(struct Move move) { return validate_rook(move) || validate_bishop(move); };
 
-bool validate_rook(struct Piece board[8][8], enum Color turn, int ax, int ay, int bx, int by) {
+bool validate_rook(struct Move move) {
+  int ax, ay, bx, by;
+  move_struct_to_number(&move, &ax, &ay, &bx, &by);
   int dirX = ax == bx ? 0 : ax > bx ? -1 : 1;
   int dirY = ay == by ? 0 : ay > by ? -1 : 1;
   if (abs(dirX) + abs(dirY) != 1) {
@@ -285,7 +301,9 @@ bool validate_rook(struct Piece board[8][8], enum Color turn, int ax, int ay, in
   return true;
 };
 
-bool validate_bishop(struct Piece board[8][8], enum Color turn, int ax, int ay, int bx, int by) {
+bool validate_bishop(struct Move move) {
+  int ax, ay, bx, by;
+  move_struct_to_number(&move, &ax, &ay, &bx, &by);
   int dirX = ax > bx ? -1 : 1;
   int dirY = ay > by ? -1 : 1;
 
@@ -310,7 +328,9 @@ bool validate_bishop(struct Piece board[8][8], enum Color turn, int ax, int ay, 
   return true;
 };
 
-bool validate_knight(struct Piece board[8][8], enum Color turn, int ax, int ay, int bx, int by) {
+bool validate_knight(struct Move move) {
+  int ax, ay, bx, by;
+  move_struct_to_number(&move, &ax, &ay, &bx, &by);
   int moveX = abs(ax - bx);
   int moveY = abs(ay - by);
   if (!(moveX == 1 && moveY == 2) && !(moveX == 2 && moveY == 1)) {
@@ -332,7 +352,7 @@ void get_king_position(int *x, int *y) {
   }
 }
 
-bool is_attacked(struct Piece board[8][8], enum Color turn, int x, int y) {
+bool is_attacked(enum Color turn, int x, int y) {
   if (x < 0 || x > 7 || y < 0 || y > 8) {
     return false;
   }
@@ -343,7 +363,7 @@ bool is_attacked(struct Piece board[8][8], enum Color turn, int x, int y) {
       if (piece->color == turn) {
         continue;
       }
-      if (check_move_validity(board, turn, j, i, x, y)) {
+      if (check_move_validity(turn, (struct Move){j, i, x, y})) {
         return true;
       }
     }
@@ -352,35 +372,33 @@ bool is_attacked(struct Piece board[8][8], enum Color turn, int x, int y) {
   return false;
 }
 
-bool is_check(struct Piece board[8][8], enum Color turn) {
+bool is_check() {
   int x, y;
   get_king_position(&x, &y);
-  return is_attacked(board, turn, x, y);
+  return is_attacked(turn, x, y);
 }
 
 bool is_checkmate() {
-  struct Piece temp[8][8];
-  memcpy(temp, board, sizeof(board));
-
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      const struct Piece piece = temp[i][j];
-      if (piece.type == EMPTY || piece.color != turn) {
+      const struct Piece piece = board[i][j];
+      if (piece.type == EMPTY || piece.type == KING || piece.color != turn) {
         continue;
       }
-
+      enum Color opponentColor = turn == WHITE ? BLACK : WHITE;
       for (int k = 0; k < 8; k++) {
         for (int l = 0; l < 8; l++) {
-          if (!check_move_validity(temp, turn == WHITE ? BLACK : WHITE, j, i, l, k)) {
+          struct Move move = {j, i, l, k};
+          if (!check_turn(move, opponentColor) || !check_move_validity(opponentColor, move)) {
             continue;
           }
-          const struct Piece victim = temp[k][l];
+          const struct Piece victim = board[k][l];
 
-          temp[k][l] = piece;
-          temp[i][j] = (struct Piece){EMPTY, WHITE};
-          bool is_right = !is_check(temp, turn);
-          temp[k][l] = victim;
-          temp[i][j] = piece;
+          board[k][l] = piece;
+          board[i][j] = (struct Piece){EMPTY, WHITE};
+          bool is_right = !is_check();
+          board[k][l] = victim;
+          board[i][j] = piece;
 
           if (is_right) {
             printw("(%d, %d) to (%d, %d)", j, i, l, k);
