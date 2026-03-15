@@ -33,7 +33,7 @@ int main() {
     int x = cols / 2 - 8;
     int y = rows / 2 + 6;
 
-    if (is_check(turn) && is_checkmate()) {
+    if (is_checkmate(turn)) {
       mvprintw(y++, x, "%s lose", turn == WHITE ? "White" : "Black");
       refresh();
       getch();

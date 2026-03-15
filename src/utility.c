@@ -34,8 +34,7 @@ void initialize_colors() {
   }
   start_color();
   init_pair(0, COLOR_WHITE, COLOR_BLACK);
-  init_pair(1, COLOR_WHITE, COLOR_YELLOW);
-  init_pair(2, COLOR_WHITE, COLOR_RED);
+  init_pair(1, COLOR_WHITE, COLOR_RED);
 }
 
 void initialize_board() {
@@ -58,10 +57,11 @@ void initialize_board() {
 void save_played_move(struct Move move) {
   int ax, ay, bx, by;
   move_struct_to_number(&move, &ax, &ay, &bx, &by);
+
   const struct Piece *piece = &board[ay][ax];
   const struct Piece *victim = &board[by][bx];
   bool is_now_check = is_check(turn);
-  bool is_now_checkmate = is_now_check ? is_checkmate() : false;
+  bool is_now_checkmate = is_checkmate(turn);
 
   struct PlayedMove played_move = {piece->type, is_now_check, is_now_checkmate, false, ax, ay, bx, by};
   played_moves[curr_move++] = played_move;

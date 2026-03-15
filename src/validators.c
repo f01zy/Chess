@@ -16,7 +16,7 @@ bool validate_pawn(enum Color turn, struct Move move) {
   if ((dirY == 1 && turn == WHITE) || (dirY == -1 && turn == BLACK)) {
     return false;
   }
-  if (moveY > max_advence || moveX > 1) {
+  if (moveY > max_advence || moveY == 0 || moveX > 1) {
     return false;
   }
 

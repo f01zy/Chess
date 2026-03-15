@@ -1,12 +1,8 @@
-#include <ncurses.h>
-
 #include "check.h"
 #include "globals.h"
 #include "types.h"
 #include "utility.h"
 #include "validators.h"
-
-// TODO: хуйня с turn, надо вообще избавится от этого параметра в функциях.
 
 bool is_attacked(enum Color turn, int x, int y) {
   if (x < 0 || x > 7 || y < 0 || y > 8) {
@@ -16,11 +12,14 @@ bool is_attacked(enum Color turn, int x, int y) {
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
       const struct Piece *piece = &board[i][j];
+      struct Move move = {j, i, x, y};
       enum Color opponent_turn = turn == WHITE ? BLACK : WHITE;
+
       if (piece->color == turn) {
         continue;
       }
-      if (check_move_validity(opponent_turn, (struct Move){j, i, x, y})) {
+
+      if (check_turn(opponent_turn, move) && check_move_validity(opponent_turn, move)) {
         return true;
       }
     }
@@ -35,30 +34,35 @@ bool is_check(enum Color turn) {
   return is_attacked(turn, x, y);
 }
 
-bool is_checkmate() {
+bool is_checkmate(enum Color turn) {
+  if (!is_check(turn)) {
+    return false;
+  }
+
+  enum Color curr_turn = turn;
+  enum Color opponent_turn = curr_turn == WHITE ? BLACK : WHITE;
+
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
       const struct Piece piece = board[i][j];
-      if (piece.type == EMPTY || piece.color != turn) {
+      if (piece.type == EMPTY || piece.color != curr_turn) {
         continue;
       }
       for (int k = 0; k < 8; k++) {
         for (int l = 0; l < 8; l++) {
           struct Move move = {j, i, l, k};
-          if (!check_turn(turn, move) || !check_move_validity(turn, move)) {
+          if (!check_turn(curr_turn, move) || !check_move_validity(curr_turn, move)) {
             continue;
           }
           const struct Piece victim = board[k][l];
 
           board[k][l] = piece;
           board[i][j] = (struct Piece){EMPTY, WHITE};
-          bool is_check_after_move = is_check(turn);
+          bool is_check_after_move = is_check(curr_turn);
           board[k][l] = victim;
           board[i][j] = piece;
-          turn = turn;
 
           if (!is_check_after_move) {
-            printw("(%d, %d) to (%d, %d)", j, i, l, k);
             return false;
           }
         }
@@ -72,8 +76,10 @@ bool is_checkmate() {
 bool check_turn(enum Color turn, struct Move move) {
   int ax, ay, bx, by;
   move_struct_to_number(&move, &ax, &ay, &bx, &by);
+
   const struct Piece *piece = &board[ay][ax];
   const struct Piece *victim = &board[by][bx];
+
   if (piece->color != turn || (victim->type != EMPTY && victim->color == turn)) {
     return false;
   }
@@ -83,6 +89,7 @@ bool check_turn(enum Color turn, struct Move move) {
 bool check_move_validity(enum Color turn, struct Move move) {
   int ax, ay, bx, by;
   move_struct_to_number(&move, &ax, &ay, &bx, &by);
+
   if ((ay < 0 || ay > 7) || (by < 0 || by > 7) || (ax < 0 || ax > 7) || (bx < 0 || bx > 7) || (ax == bx && ay == by)) {
     return false;
   }

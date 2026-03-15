@@ -10,13 +10,10 @@ void render() {
   getmaxyx(stdscr, rows, cols);
 
   bool is_now_check = is_check(turn);
-  bool is_now_checkmate = is_now_check ? is_checkmate() : false;
+  bool is_now_checkmate = is_checkmate(turn);
 
   clear();
   for (int i = MAX(curr_move - DRAW_MOVES, 0); i <= curr_move; i++) {
-    int x = cols / 2 - 8 + i * 2;
-    int y = rows / 2 - 6;
-    const struct PlayedMove *played_move = &played_moves[i];
     // TODO: played_move drawing
   }
   for (int i = 0; i < 8; i++) {
@@ -25,8 +22,8 @@ void render() {
       wchar_t ch = ' ';
       int color = 0;
 
-      if (piece->type == KING && piece->color == turn) {
-        color = is_now_checkmate ? 2 : is_now_check ? 1 : 0;
+      if (piece->type == KING && piece->color == turn && is_now_check) {
+        color = 1;
       }
 
       // clang-format off
