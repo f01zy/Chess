@@ -9,7 +9,7 @@ void render() {
   int rows, cols;
   getmaxyx(stdscr, rows, cols);
 
-  bool is_now_check = is_check();
+  bool is_now_check = is_check(turn);
   bool is_now_checkmate = is_now_check ? is_checkmate() : false;
 
   clear();

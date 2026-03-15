@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-#define MAX(A, B)    A > B ? A : B
+#define MAX(A, B)    ((A) > (B) ? (A) : (B))
 #define DRAW_MOVES   4
 #define MAX_MOVES    1024
 #define MIN_WIDTH    20

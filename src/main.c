@@ -9,11 +9,6 @@
 #include "types.h"
 #include "utility.h"
 
-void get_king_position(int *x, int *y);
-void initialize_board();
-void initialize_colors();
-void move_struct_to_number(const struct Move *move, int *ax, int *ay, int *bx, int *by);
-
 int main() {
   setlocale(LC_ALL, "");
   initscr();
@@ -31,9 +26,6 @@ int main() {
     exit(1);
   }
 
-  bool is_now_check;
-  bool is_now_checkmate;
-
   do {
     render();
     char fromX, toX;
@@ -41,7 +33,7 @@ int main() {
     int x = cols / 2 - 8;
     int y = rows / 2 + 6;
 
-    if (is_now_checkmate) {
+    if (is_check(turn) && is_checkmate()) {
       mvprintw(y++, x, "%s lose", turn == WHITE ? "White" : "Black");
       refresh();
       getch();
@@ -65,10 +57,8 @@ int main() {
     int bx = toX - 'a';
     int by = 8 - toY;
 
-    const struct Piece *piece = &board[ay][ax];
-    const struct Piece *victim = &board[by][bx];
     struct Move move = {ax, ay, bx, by};
-    if (!check_turn(move, turn) || !check_move_validity(turn, move)) {
+    if (!check_turn(turn, move) || !check_move_validity(turn, move)) {
       mvprintw(y++, x, "The move is incorrent\n");
       getch();
       continue;
@@ -77,10 +67,7 @@ int main() {
     board[by][bx] = board[ay][ax];
     board[ay][ax] = (struct Piece){EMPTY, WHITE};
     turn = turn == WHITE ? BLACK : WHITE;
-    is_now_check = is_check();
-    is_now_checkmate = is_now_check ? is_checkmate() : false;
-    struct PlayedMove played_move = {piece->type, is_now_check, is_now_checkmate, false, ax, ay, bx, by};
-    played_moves[curr_move++] = played_move;
+    save_played_move(move);
   } while (TRUE);
 
   endwin();
