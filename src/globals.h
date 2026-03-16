@@ -3,8 +3,7 @@
 
 #include "types.h"
 
-#define MAX(A, B)    ((A) > (B) ? (A) : (B))
-#define DRAW_MOVES   4
+#define DRAW_MOVES   12
 #define MAX_MOVES    1024
 #define MIN_WIDTH    20
 #define MIN_HEIGHT   20
@@ -21,6 +20,8 @@
 #define BLACK_ROOK   L'\u265C'
 #define BLACK_BISHOP L'\u265D'
 #define BLACK_KNIGHT L'\u265E'
+#define MAX(A, B)    ((A) > (B) ? (A) : (B))
+#define MIN(A, B)    ((A) < (B) ? (A) : (B))
 
 extern int curr_move;
 extern struct PlayedMove played_moves[MAX_MOVES];

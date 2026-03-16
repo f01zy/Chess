@@ -27,7 +27,7 @@ int main() {
   }
 
   do {
-    render();
+    render_board();
     char fromX, toX;
     int fromY, toY;
     int x = cols / 2 - 8;
@@ -57,6 +57,8 @@ int main() {
     int bx = toX - 'a';
     int by = 8 - toY;
 
+    struct Piece piece = board[ay][ax];
+    struct Piece victim = board[by][bx];
     struct Move move = {ax, ay, bx, by};
     if (!check_turn(turn, move) || !check_move_validity(turn, move)) {
       mvprintw(y++, x, "The move is incorrent\n");
@@ -67,7 +69,12 @@ int main() {
     board[by][bx] = board[ay][ax];
     board[ay][ax] = (struct Piece){EMPTY, WHITE};
     turn = turn == WHITE ? BLACK : WHITE;
-    save_played_move(move);
+
+    bool is_now_check = is_check(turn);
+    bool is_now_checkmate = is_checkmate(turn);
+    bool is_take = victim.type == EMPTY ? false : true;
+    struct PlayedMove played_move = {piece.type, is_now_check, is_now_checkmate, is_take, ax, ay, bx, by};
+    played_moves[curr_move++] = played_move;
   } while (TRUE);
 
   endwin();

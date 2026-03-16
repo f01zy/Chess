@@ -4,8 +4,61 @@
 #include "check.h"
 #include "globals.h"
 #include "rendering.h"
+#include "types.h"
 
-void render() {
+void render_played_moves() {
+  int rows, cols;
+  int start = MAX(curr_move - DRAW_MOVES, 0);
+  getmaxyx(stdscr, rows, cols);
+
+  for (int i = 0, j = start; j < curr_move && j < rows; i++, j++) {
+    // TODO: played_move drawing
+    struct PlayedMove played_move = played_moves[j];
+    char piece;
+    char buffer[10];
+    char ax = 'a' + played_move.ax;
+    char bx = 'a' + played_move.bx;
+    char by = '0' + 8 - played_move.by;
+    int curr = 0;
+
+    // clang-format off
+    switch (played_move.type) {
+      case PAWN:   piece = ' '; break;
+      case KING:   piece = 'K'; break;
+      case QUEEN:  piece = 'Q'; break;
+      case ROOK:   piece = 'R'; break;
+      case BISHOP: piece = 'B'; break;
+      case KNIGHT: piece = 'N'; break;
+      case EMPTY:  piece = ' '; break;
+    }
+    // clang-format on
+
+    if (piece != ' ') {
+      buffer[curr++] = piece;
+    }
+    if (played_move.type == PAWN && played_move.is_take) {
+      buffer[curr++] = ax;
+    }
+    if (played_move.is_take) {
+      buffer[curr++] = 'x';
+    }
+    buffer[curr++] = bx;
+    buffer[curr++] = by;
+
+    if (played_move.is_checkmate) {
+      buffer[curr++] = '#';
+    } else if (played_move.is_check) {
+      buffer[curr++] = '+';
+    }
+    buffer[curr] = '\0';
+
+    int x = 2;
+    int y = i + 1;
+    mvprintw(y, x, "%d. %s", j + 1, buffer);
+  }
+}
+
+void render_board() {
   int rows, cols;
   getmaxyx(stdscr, rows, cols);
 
@@ -13,9 +66,7 @@ void render() {
   bool is_now_checkmate = is_checkmate(turn);
 
   clear();
-  for (int i = MAX(curr_move - DRAW_MOVES, 0); i <= curr_move; i++) {
-    // TODO: played_move drawing
-  }
+  render_played_moves();
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
       struct Piece *piece = &board[i][j];

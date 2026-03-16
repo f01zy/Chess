@@ -36,10 +36,6 @@ bool validate_pawn(enum Color turn, struct Move move) {
 bool validate_king(struct Move move) {
   int ax, ay, bx, by;
   move_struct_to_number(&move, &ax, &ay, &bx, &by);
-  const struct Piece *victim = &board[by][bx];
-  if (victim->type != EMPTY && victim->color == turn) {
-    return false;
-  }
   if (abs(ax - bx) > 1 || abs(ay - by) > 1) {
     return false;
   }

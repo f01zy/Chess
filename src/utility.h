@@ -3,7 +3,6 @@
 
 #include "types.h"
 
-void save_played_move(struct Move move);
 void get_king_position(enum Color turn, int *x, int *y);
 void initialize_board();
 void initialize_colors();
