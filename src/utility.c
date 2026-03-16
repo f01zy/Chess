@@ -8,8 +8,8 @@
 void get_king_position(enum Color turn, int *x, int *y) {
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      const struct Piece *piece = &board[i][j];
-      if (piece->type == KING && piece->color == turn) {
+      struct Piece piece = board[i][j];
+      if (piece.type == KING && piece.color == turn) {
         *y = i;
         *x = j;
         return;

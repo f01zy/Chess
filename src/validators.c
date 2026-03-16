@@ -20,13 +20,13 @@ bool validate_pawn(enum Color turn, struct Move move) {
     return false;
   }
 
-  const struct Piece *nextPiece = &board[ay + dirY][ax];
-  if (moveY == 2 && (moveX == 1 || nextPiece->type != EMPTY)) {
+  struct Piece nextPiece = board[ay + dirY][ax];
+  if (moveY == 2 && (moveX == 1 || nextPiece.type != EMPTY)) {
     return false;
   }
 
-  const struct Piece *victim = &board[by][bx];
-  if ((moveX == 0 && victim->type != EMPTY) || (moveX == 1 && victim->type == EMPTY)) {
+  struct Piece victim = board[by][bx];
+  if ((moveX == 0 && victim.type != EMPTY) || (moveX == 1 && victim.type == EMPTY)) {
     return false;
   }
 

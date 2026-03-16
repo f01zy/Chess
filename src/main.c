@@ -1,3 +1,11 @@
+
+/*
+ * TODO
+ * 1. взятие на проходе.
+ * 2. рокировка.
+ * 3. онлайн.
+ */
+
 #include <locale.h>
 #include <ncurses.h>
 #include <stdlib.h>
@@ -40,7 +48,8 @@ int main() {
       break;
     }
 
-    mvprintw(y++, x, "Coordinates: ");
+    // TODO: создать функцию перевода Color в строку.
+    mvprintw(y++, x, "Coordinates (%s turn): ", turn == WHITE ? "white" : "black");
     refresh();
     char buffer[5];
     echo();
@@ -60,21 +69,33 @@ int main() {
     struct Piece piece = board[ay][ax];
     struct Piece victim = board[by][bx];
     struct Move move = {ax, ay, bx, by};
-    if (!check_turn(turn, move) || !check_move_validity(turn, move)) {
+
+    struct PlayedMove played_move;
+    played_move.type = piece.type;
+    played_move.turn = turn;
+    played_move.ax = ax;
+    played_move.ay = ay;
+    played_move.bx = bx;
+    played_move.by = by;
+
+    if (!check_move_validity(turn, move)) {
       mvprintw(y++, x, "The move is incorrent\n");
       getch();
       continue;
     }
 
-    board[by][bx] = board[ay][ax];
+    // TODO: закинуть в отдельную функцию чтобы было понятнее.
+    board[by][bx] = piece;
     board[ay][ax] = (struct Piece){EMPTY, WHITE};
+    if (piece.color == victim.color) {
+      // TODO: правильно переставить ладью и короля.
+    }
     turn = turn == WHITE ? BLACK : WHITE;
 
-    bool is_now_check = is_check(turn);
-    bool is_now_checkmate = is_checkmate(turn);
-    bool is_take = victim.type == EMPTY ? false : true;
-    struct PlayedMove played_move = {piece.type, is_now_check, is_now_checkmate, is_take, ax, ay, bx, by};
-    played_moves[curr_move++] = played_move;
+    played_move.is_check = is_check(turn);
+    played_move.is_checkmate = is_checkmate(turn);
+    played_move.is_take = victim.type == EMPTY ? false : true;
+    played_moves[played_moves_count++] = played_move;
   } while (TRUE);
 
   endwin();

@@ -8,11 +8,10 @@
 
 void render_played_moves() {
   int rows, cols;
-  int start = MAX(curr_move - DRAW_MOVES, 0);
+  int start = MAX(played_moves_count - DRAW_MOVES, 0);
   getmaxyx(stdscr, rows, cols);
 
-  for (int i = 0, j = start; j < curr_move && j < rows; i++, j++) {
-    // TODO: played_move drawing
+  for (int i = 0, j = start; j < played_moves_count && j < rows; i++, j++) {
     struct PlayedMove played_move = played_moves[j];
     char piece;
     char buffer[10];
@@ -69,22 +68,22 @@ void render_board() {
   render_played_moves();
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      struct Piece *piece = &board[i][j];
+      struct Piece piece = board[i][j];
       wchar_t ch = ' ';
       int color = 0;
 
-      if (piece->type == KING && piece->color == turn && is_now_check) {
+      if (piece.type == KING && piece.color == turn && is_now_check) {
         color = 1;
       }
 
       // clang-format off
-      switch (piece->type) {
-        case PAWN:   ch = piece->color == WHITE ? WHITE_PAWN   : BLACK_PAWN;   break;
-        case KING:   ch = piece->color == WHITE ? WHITE_KING   : BLACK_KING;   break;
-        case QUEEN:  ch = piece->color == WHITE ? WHITE_QUEEN  : BLACK_QUEEN;  break;
-        case ROOK:   ch = piece->color == WHITE ? WHITE_ROOK   : BLACK_ROOK;   break;
-        case BISHOP: ch = piece->color == WHITE ? WHITE_BISHOP : BLACK_BISHOP; break;
-        case KNIGHT: ch = piece->color == WHITE ? WHITE_KNIGHT : BLACK_KNIGHT; break;
+      switch (piece.type) {
+        case PAWN:   ch = piece.color == WHITE ? WHITE_PAWN   : BLACK_PAWN;   break;
+        case KING:   ch = piece.color == WHITE ? WHITE_KING   : BLACK_KING;   break;
+        case QUEEN:  ch = piece.color == WHITE ? WHITE_QUEEN  : BLACK_QUEEN;  break;
+        case ROOK:   ch = piece.color == WHITE ? WHITE_ROOK   : BLACK_ROOK;   break;
+        case BISHOP: ch = piece.color == WHITE ? WHITE_BISHOP : BLACK_BISHOP; break;
+        case KNIGHT: ch = piece.color == WHITE ? WHITE_KNIGHT : BLACK_KNIGHT; break;
         case EMPTY:                                                            break;
       }
       // clang-format on

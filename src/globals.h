@@ -23,9 +23,9 @@
 #define MAX(A, B)    ((A) > (B) ? (A) : (B))
 #define MIN(A, B)    ((A) < (B) ? (A) : (B))
 
-extern int curr_move;
-extern struct PlayedMove played_moves[MAX_MOVES];
-extern struct Piece board[8][8];
 extern enum Color turn;
+extern struct Piece board[8][8];
+extern struct PlayedMove played_moves[MAX_MOVES];
+extern int played_moves_count;
 
 #endif

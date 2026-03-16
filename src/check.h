@@ -7,6 +7,6 @@ bool is_attacked(enum Color turn, int x, int y);
 bool is_check(enum Color turn);
 bool is_checkmate(enum Color turn);
 bool check_move_validity(enum Color turn, struct Move move);
-bool check_turn(enum Color turn, struct Move move);
+bool check_castling(enum Color turn, struct Move move);
 
 #endif

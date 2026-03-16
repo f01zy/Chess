@@ -20,6 +20,7 @@ struct Move {
 
 struct PlayedMove {
   enum PieceType type;
+  enum Color turn;
   bool is_check;
   bool is_checkmate;
   bool is_take;
