@@ -2,106 +2,87 @@
 #include <stdlib.h>
 
 #include "globals.h"
-#include "utility.h"
+#include "types.h"
 #include "validators.h"
 
-bool validate_pawn(enum Color turn, struct Move move) {
-  int ax, ay, bx, by;
-  move_struct_to_number(&move, &ax, &ay, &bx, &by);
-  int dirY = ay == by ? 0 : ay > by ? -1 : 1;
-  int moveX = abs(ax - bx);
-  int moveY = abs(ay - by);
-  int max_advence = (ay == 1 || ay == 6) ? 2 : 1;
+enum MoveType validate_pawn(enum Color turn, struct Move move) {
+  int dirY = move.ay == move.by ? 0 : move.ay > move.by ? -1 : 1;
+  int moveX = abs(move.ax - move.bx);
+  int moveY = abs(move.ay - move.by);
+  int max_advence = (move.ay == 1 || move.ay == 6) ? 2 : 1;
 
-  if ((dirY == 1 && turn == WHITE) || (dirY == -1 && turn == BLACK)) {
-    return false;
-  }
-  if (moveY > max_advence || moveY == 0 || moveX > 1) {
-    return false;
+  if ((dirY == 1 && turn == WHITE) || (dirY == -1 && turn == BLACK)) { return MOVE_INVALID; }
+  if (moveY > max_advence || moveY == 0 || moveX > 1) { return MOVE_INVALID; }
+
+  struct Piece nextPiece = board[move.ay + dirY][move.ax];
+  if (moveY == 2 && (moveX == 1 || nextPiece.type != EMPTY)) { return MOVE_INVALID; }
+
+  struct Piece victim = board[move.by][move.bx];
+  if (moveX == 0 && victim.type != EMPTY) { return MOVE_INVALID; }
+  if (moveX == 1 && victim.type == EMPTY) {
+    if (!played_moves_count) { return MOVE_INVALID; }
+    struct PlayedMove previous_move = played_moves[played_moves_count - 1];
+    bool is_two_cels = abs(previous_move.ay - previous_move.by) == 2;
+    bool is_certain_ceil = previous_move.by == move.ay - dirY;
+    bool is_en_passant = previous_move.move_type == MOVE_EN_PASSANT;
+    if (is_en_passant) { return MOVE_EN_PASSANT; }
+    return MOVE_INVALID;
   }
 
-  struct Piece nextPiece = board[ay + dirY][ax];
-  if (moveY == 2 && (moveX == 1 || nextPiece.type != EMPTY)) {
-    return false;
-  }
-
-  struct Piece victim = board[by][bx];
-  if ((moveX == 0 && victim.type != EMPTY) || (moveX == 1 && victim.type == EMPTY)) {
-    return false;
-  }
-
-  return true;
+  return MOVE_NORMAL;
 };
 
-bool validate_king(struct Move move) {
-  int ax, ay, bx, by;
-  move_struct_to_number(&move, &ax, &ay, &bx, &by);
-  if (abs(ax - bx) > 1 || abs(ay - by) > 1) {
-    return false;
-  }
-  return true;
+enum MoveType validate_king(struct Move move) {
+  if (abs(move.ax - move.bx) > 1 || abs(move.ay - move.by) > 1) { return MOVE_INVALID; }
+  return MOVE_NORMAL;
 };
 
-bool validate_queen(struct Move move) { return validate_rook(move) || validate_bishop(move); };
+enum MoveType validate_queen(struct Move move) {
+  enum MoveType is_rook = validate_rook(move);
+  enum MoveType is_bishop = validate_bishop(move);
+  if (is_rook != MOVE_INVALID) { return is_rook; }
+  if (is_bishop != MOVE_INVALID) { return is_bishop; }
+  return MOVE_INVALID;
+};
 
-bool validate_rook(struct Move move) {
-  int ax, ay, bx, by;
-  move_struct_to_number(&move, &ax, &ay, &bx, &by);
-  int dirX = ax == bx ? 0 : ax > bx ? -1 : 1;
-  int dirY = ay == by ? 0 : ay > by ? -1 : 1;
-  if (abs(dirX) + abs(dirY) != 1) {
-    return false;
-  }
+enum MoveType validate_rook(struct Move move) {
+  int dirX = move.ax == move.bx ? 0 : move.ax > move.bx ? -1 : 1;
+  int dirY = move.ay == move.by ? 0 : move.ay > move.by ? -1 : 1;
+  if (abs(dirX) + abs(dirY) != 1) { return MOVE_INVALID; }
 
-  int i = ay, j = ax;
+  int i = move.ay, j = move.ax;
   while (1) {
     i += dirY;
     j += dirX;
-    if (i == by && j == bx) {
-      break;
-    }
-    if (board[i][j].type != EMPTY) {
-      return false;
-    }
+    if (i == move.by && j == move.bx) { break; }
+    if (board[i][j].type != EMPTY) { return MOVE_INVALID; }
   }
 
-  return true;
+  return MOVE_NORMAL;
 };
 
-bool validate_bishop(struct Move move) {
-  int ax, ay, bx, by;
-  move_struct_to_number(&move, &ax, &ay, &bx, &by);
-  int dirX = ax > bx ? -1 : 1;
-  int dirY = ay > by ? -1 : 1;
+enum MoveType validate_bishop(struct Move move) {
+  int dirX = move.ax > move.bx ? -1 : 1;
+  int dirY = move.ay > move.by ? -1 : 1;
 
-  int moveX = abs(ax - bx);
-  int moveY = abs(ay - by);
-  if (moveX != moveY) {
-    return false;
-  }
+  int moveX = abs(move.ax - move.bx);
+  int moveY = abs(move.ay - move.by);
+  if (moveX != moveY) { return MOVE_INVALID; }
 
-  int i = ay, j = ax;
+  int i = move.ay, j = move.ax;
   while (1) {
     i += dirY;
     j += dirX;
-    if (i == by && j == bx) {
-      break;
-    }
-    if (board[i][j].type != EMPTY) {
-      return false;
-    }
+    if (i == move.by && j == move.bx) { break; }
+    if (board[i][j].type != EMPTY) { return MOVE_INVALID; }
   }
 
-  return true;
+  return MOVE_NORMAL;
 };
 
-bool validate_knight(struct Move move) {
-  int ax, ay, bx, by;
-  move_struct_to_number(&move, &ax, &ay, &bx, &by);
-  int moveX = abs(ax - bx);
-  int moveY = abs(ay - by);
-  if (!(moveX == 1 && moveY == 2) && !(moveX == 2 && moveY == 1)) {
-    return false;
-  }
-  return true;
+enum MoveType validate_knight(struct Move move) {
+  int moveX = abs(move.ax - move.bx);
+  int moveY = abs(move.ay - move.by);
+  if (!(moveX == 1 && moveY == 2) && !(moveX == 2 && moveY == 1)) { return MOVE_INVALID; }
+  return MOVE_NORMAL;
 };

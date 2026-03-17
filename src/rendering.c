@@ -22,7 +22,7 @@ void render_played_moves() {
     int curr = 0;
 
     // clang-format off
-    switch (played_move.type) {
+    switch (played_move.piece_type) {
       case PAWN:   piece = ' '; break;
       case KING:   piece = 'K'; break;
       case QUEEN:  piece = 'Q'; break;
@@ -31,20 +31,20 @@ void render_played_moves() {
       case KNIGHT: piece = 'N'; break;
       case EMPTY:  piece = ' '; break;
     }
+    // clang-format on
 
     if (played_move.is_castling) {
       strcpy(buffer, "O-O-O\0");
     } else {
       if (piece != ' ') buffer[curr++] = piece;
-      if (played_move.type == PAWN && played_move.is_take) buffer[curr++] = ax;
+      if (played_move.piece_type == PAWN && played_move.is_take) buffer[curr++] = ax;
       if (played_move.is_take) buffer[curr++] = 'x';
       buffer[curr++] = bx;
       buffer[curr++] = by;
       if (played_move.is_checkmate) buffer[curr++] = '#';
-      else if (played_move.is_check) buffer[curr++] = '+';
+      if (!played_move.is_checkmate && played_move.is_check) buffer[curr++] = '+';
       buffer[curr] = '\0';
     }
-    // clang-format on
 
     int x = 2;
     int y = i + 1;
@@ -65,11 +65,9 @@ void render_board() {
     for (int j = 0; j < 8; j++) {
       struct Piece piece = board[i][j];
       wchar_t ch = ' ';
-      int color = 0;
 
-      if (piece.type == KING && piece.color == turn && is_now_check) {
-        color = 1;
-      }
+      int color = 0;
+      if (piece.type == KING && piece.color == turn && is_now_check) { color = 1; }
 
       // clang-format off
       switch (piece.type) {
@@ -79,7 +77,7 @@ void render_board() {
         case ROOK:   ch = piece.color == WHITE ? WHITE_ROOK   : BLACK_ROOK;   break;
         case BISHOP: ch = piece.color == WHITE ? WHITE_BISHOP : BLACK_BISHOP; break;
         case KNIGHT: ch = piece.color == WHITE ? WHITE_KNIGHT : BLACK_KNIGHT; break;
-        case EMPTY:                                                            break;
+        case EMPTY:                                                           break;
       }
       // clang-format on
 

@@ -1,9 +1,3 @@
-
-/*
- * TODO
- * 1. взятие на проходе.
- */
-
 #include <locale.h>
 #include <ncurses.h>
 #include <stdlib.h>
@@ -60,53 +54,25 @@ int main() {
     int count = getnstr(buffer, sizeof(buffer));
     noecho();
 
-    if (strcmp(buffer, "q") == 0) {
-      break;
-    }
-
+    if (strcmp(buffer, "q") == 0) { break; }
     sscanf(buffer, "%c%d-%c%d", &fromX, &fromY, &toX, &toY);
     int ax = fromX - 'a';
     int ay = 8 - fromY;
     int bx = toX - 'a';
     int by = 8 - toY;
 
-    struct Piece piece = board[ay][ax];
-    struct Piece victim = board[by][bx];
     struct Move move = {ax, ay, bx, by};
-    struct PlayedMove played_move = {piece.type, turn, false, false, false, false, ax, ay, bx, by};
-
-    if (!check_move_validity(turn, move)) {
+    enum MoveType move_type = check_move_validity(turn, move);
+    if (move_type == MOVE_INVALID) {
       mvprintw(y++, x, "The move is incorrent\n");
       refresh();
       getch();
       continue;
     }
 
-    // TODO: закинуть в отдельную функцию чтобы было понятнее.
-    bool is_castling = piece.color == victim.color && piece.type == KING && victim.type == ROOK;
-
-    if (is_castling || piece.type == KING || piece.type == ROOK) {
-      turn == WHITE ? (can_white_castle = false) : (can_black_castle = false);
-    }
-
-    if (is_castling) {
-      int king_new_x = bx == 0 ? 2 : 6;
-      int rook_new_x = bx == 0 ? 3 : 5;
-      board[by][king_new_x] = piece;
-      board[by][rook_new_x] = victim;
-      board[by][bx] = (struct Piece){EMPTY, WHITE};
-      board[ay][ax] = (struct Piece){EMPTY, WHITE};
-    } else {
-      board[by][bx] = piece;
-      board[ay][ax] = (struct Piece){EMPTY, WHITE};
-    }
+    execute_move(move, move_type);
+    save_played_move(move, move_type);
     turn = turn == WHITE ? BLACK : WHITE;
-
-    played_move.is_check = is_check(turn);
-    played_move.is_checkmate = is_checkmate(turn);
-    played_move.is_take = victim.type == EMPTY ? false : true;
-    played_move.is_castling = is_castling;
-    played_moves[played_moves_count++] = played_move;
   } while (TRUE);
 
   endwin();

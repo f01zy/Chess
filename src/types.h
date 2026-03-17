@@ -5,6 +5,7 @@
 
 enum PieceType { EMPTY, PAWN, KING, QUEEN, ROOK, BISHOP, KNIGHT };
 enum Color { WHITE, BLACK };
+enum MoveType { MOVE_NORMAL, MOVE_PAWN_DOUBLE, MOVE_EN_PASSANT, MOVE_CASTLING, MOVE_PROMOTION, MOVE_INVALID };
 
 struct Piece {
   enum PieceType type;
@@ -19,8 +20,9 @@ struct Move {
 };
 
 struct PlayedMove {
-  enum PieceType type;
   enum Color turn;
+  enum PieceType piece_type;
+  enum MoveType move_type;
   bool is_check;
   bool is_checkmate;
   bool is_take;

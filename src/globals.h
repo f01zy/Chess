@@ -20,8 +20,14 @@
 #define BLACK_ROOK   L'\u265C'
 #define BLACK_BISHOP L'\u265D'
 #define BLACK_KNIGHT L'\u265E'
+
 #define MAX(A, B)    ((A) > (B) ? (A) : (B))
 #define MIN(A, B)    ((A) < (B) ? (A) : (B))
+#define UNPACK_MOVE(m, board)                                                                                                                                  \
+  int ax, ay, bx, by;                                                                                                                                          \
+  move_struct_to_number(&m, &ax, &ay, &bx, &by);                                                                                                               \
+  struct Piece piece = board[ay][ax];                                                                                                                          \
+  struct Piece victim = board[by][bx];
 
 extern enum Color turn;
 extern struct Piece board[8][8];
