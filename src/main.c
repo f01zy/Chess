@@ -48,8 +48,8 @@ int main() {
       break;
     }
 
-    // TODO: создать функцию перевода Color в строку.
-    mvprintw(y++, x, "Coordinates (%s turn): ", turn == WHITE ? "white" : "black");
+    char *label = turn == WHITE ? "white" : "black";
+    mvprintw(y++, x, "Coordinates (%s turn): ", label);
     refresh();
     char buffer[5];
     echo();
@@ -69,32 +69,34 @@ int main() {
     struct Piece piece = board[ay][ax];
     struct Piece victim = board[by][bx];
     struct Move move = {ax, ay, bx, by};
-
-    struct PlayedMove played_move;
-    played_move.type = piece.type;
-    played_move.turn = turn;
-    played_move.ax = ax;
-    played_move.ay = ay;
-    played_move.bx = bx;
-    played_move.by = by;
+    struct PlayedMove played_move = {piece.type, turn, false, false, false, false, ax, ay, bx, by};
 
     if (!check_move_validity(turn, move)) {
       mvprintw(y++, x, "The move is incorrent\n");
+      refresh();
       getch();
       continue;
     }
 
     // TODO: закинуть в отдельную функцию чтобы было понятнее.
-    board[by][bx] = piece;
-    board[ay][ax] = (struct Piece){EMPTY, WHITE};
-    if (piece.color == victim.color) {
-      // TODO: правильно переставить ладью и короля.
+    bool is_castling = piece.color == victim.color && piece.type == KING && victim.type == ROOK;
+    if (is_castling) {
+      int king_new_x = bx == 0 ? 2 : 6;
+      int rook_new_x = bx == 0 ? 3 : 5;
+      board[by][king_new_x] = piece;
+      board[by][rook_new_x] = victim;
+      board[by][bx] = (struct Piece){EMPTY, WHITE};
+      board[ay][ax] = (struct Piece){EMPTY, WHITE};
+    } else {
+      board[by][bx] = piece;
+      board[ay][ax] = (struct Piece){EMPTY, WHITE};
     }
     turn = turn == WHITE ? BLACK : WHITE;
 
     played_move.is_check = is_check(turn);
     played_move.is_checkmate = is_checkmate(turn);
     played_move.is_take = victim.type == EMPTY ? false : true;
+    played_move.is_castling = is_castling;
     played_moves[played_moves_count++] = played_move;
   } while (TRUE);
 

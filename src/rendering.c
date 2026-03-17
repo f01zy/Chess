@@ -1,4 +1,5 @@
 #include <ncurses.h>
+#include <string.h>
 #include <wchar.h>
 
 #include "check.h"
@@ -30,26 +31,20 @@ void render_played_moves() {
       case KNIGHT: piece = 'N'; break;
       case EMPTY:  piece = ' '; break;
     }
+
+    if (played_move.is_castling) {
+      strcpy(buffer, "O-O-O\0");
+    } else {
+      if (piece != ' ') buffer[curr++] = piece;
+      if (played_move.type == PAWN && played_move.is_take) buffer[curr++] = ax;
+      if (played_move.is_take) buffer[curr++] = 'x';
+      buffer[curr++] = bx;
+      buffer[curr++] = by;
+      if (played_move.is_checkmate) buffer[curr++] = '#';
+      else if (played_move.is_check) buffer[curr++] = '+';
+      buffer[curr] = '\0';
+    }
     // clang-format on
-
-    if (piece != ' ') {
-      buffer[curr++] = piece;
-    }
-    if (played_move.type == PAWN && played_move.is_take) {
-      buffer[curr++] = ax;
-    }
-    if (played_move.is_take) {
-      buffer[curr++] = 'x';
-    }
-    buffer[curr++] = bx;
-    buffer[curr++] = by;
-
-    if (played_move.is_checkmate) {
-      buffer[curr++] = '#';
-    } else if (played_move.is_check) {
-      buffer[curr++] = '+';
-    }
-    buffer[curr] = '\0';
 
     int x = 2;
     int y = i + 1;

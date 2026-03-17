@@ -4,8 +4,6 @@
 #include "utility.h"
 #include "validators.h"
 
-#include <ncurses.h>
-
 bool is_attacked(enum Color turn, int x, int y) {
   if (x < 0 || x > 7 || y < 0 || y > 7) {
     return false;
@@ -22,7 +20,6 @@ bool is_attacked(enum Color turn, int x, int y) {
       }
 
       if (check_move_validity(opponent_turn, move)) {
-        printw("(%d, %d) atacked (%d, %d)\n", j, i, x, y);
         return true;
       }
     }
@@ -113,7 +110,6 @@ bool check_move_validity(enum Color turn, struct Move move) {
   return false;
 };
 
-// TODO: щас работает только формат король-ладья, надо сделать и обратный.
 bool check_castling(enum Color turn, struct Move move) {
   if (is_check(turn)) {
     return false;
@@ -125,7 +121,7 @@ bool check_castling(enum Color turn, struct Move move) {
   for (int i = 0; i < played_moves_count; i++) {
     struct PlayedMove played_move = played_moves[i];
     bool is_king = played_move.type == KING;
-    bool is_rook = played_move.type == ROOK && played_move.ax == move.ax && played_move.ay == move.ay;
+    bool is_rook = played_move.type == ROOK && played_move.ax == move.bx && played_move.ay == move.by;
     if (played_move.turn == turn && (is_king || is_rook)) {
       return false;
     }
@@ -135,7 +131,6 @@ bool check_castling(enum Color turn, struct Move move) {
   for (int i = ax + dirX; i != bx; i += dirX) {
     struct Piece piece = board[ay][i];
     if (piece.type != EMPTY || is_attacked(turn, i, ay)) {
-      printw("(%d, %d) atacked\n", i, ay);
       return false;
     }
   }

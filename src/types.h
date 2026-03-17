@@ -24,6 +24,7 @@ struct PlayedMove {
   bool is_check;
   bool is_checkmate;
   bool is_take;
+  bool is_castling;
   int ax;
   int ay;
   int bx;
