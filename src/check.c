@@ -80,17 +80,16 @@ bool check_move_validity(enum Color turn, struct Move move) {
   if ((ay < 0 || ay > 7) || (by < 0 || by > 7) || (ax < 0 || ax > 7) || (bx < 0 || bx > 7) || (ax == bx && ay == by)) {
     return false;
   }
+
   struct Piece piece = board[ay][ax];
   struct Piece victim = board[by][bx];
 
   if (piece.color != turn) {
     return false;
   }
-
   if (victim.color == turn && piece.type == KING && victim.type == ROOK) {
     return check_castling(turn, move);
   }
-
   if (victim.type != EMPTY && victim.color == turn) {
     return false;
   }
@@ -118,13 +117,8 @@ bool check_castling(enum Color turn, struct Move move) {
   int ax, ay, bx, by;
   move_struct_to_number(&move, &ax, &ay, &bx, &by);
 
-  for (int i = 0; i < played_moves_count; i++) {
-    struct PlayedMove played_move = played_moves[i];
-    bool is_king = played_move.type == KING;
-    bool is_rook = played_move.type == ROOK && played_move.ax == move.bx && played_move.ay == move.by;
-    if (played_move.turn == turn && (is_king || is_rook)) {
-      return false;
-    }
+  if ((turn == WHITE && !can_white_castle) || (turn == BLACK && !can_black_castle)) {
+    return false;
   }
 
   int dirX = ax > bx ? -1 : 1;

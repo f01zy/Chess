@@ -34,6 +34,7 @@ void initialize_colors() {
   start_color();
   init_pair(0, COLOR_WHITE, COLOR_BLACK);
   init_pair(1, COLOR_WHITE, COLOR_RED);
+  init_pair(2, COLOR_BLACK, COLOR_WHITE);
 }
 
 void initialize_board() {

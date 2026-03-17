@@ -27,5 +27,7 @@ extern enum Color turn;
 extern struct Piece board[8][8];
 extern struct PlayedMove played_moves[MAX_MOVES];
 extern int played_moves_count;
+extern bool can_white_castle;
+extern bool can_black_castle;
 
 #endif

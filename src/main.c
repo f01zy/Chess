@@ -2,8 +2,6 @@
 /*
  * TODO
  * 1. взятие на проходе.
- * 2. рокировка.
- * 3. онлайн.
  */
 
 #include <locale.h>
@@ -26,15 +24,15 @@ int main() {
   initialize_colors();
   initialize_board();
 
-  int rows, cols;
-  getmaxyx(stdscr, rows, cols);
-  if (cols < MIN_WIDTH || rows < MIN_HEIGHT) {
-    endwin();
-    printf("Your terminal too little. Minimum size is %dx%d\n", MIN_WIDTH, MIN_HEIGHT);
-    exit(1);
-  }
-
   do {
+    int rows, cols;
+    getmaxyx(stdscr, rows, cols);
+    if (cols < MIN_WIDTH || rows < MIN_HEIGHT) {
+      endwin();
+      printf("Your terminal too little. Minimum size is %dx%d\n", MIN_WIDTH, MIN_HEIGHT);
+      exit(1);
+    }
+
     render_board();
     char fromX, toX;
     int fromY, toY;
@@ -48,8 +46,14 @@ int main() {
       break;
     }
 
-    char *label = turn == WHITE ? "white" : "black";
-    mvprintw(y++, x, "Coordinates (%s turn): ", label);
+    // TODO: закинуть в отдельную функцию
+    char *label = turn == WHITE ? "White" : "Black";
+    int color = turn == WHITE ? 2 : 0;
+    attron(COLOR_PAIR(color));
+    mvprintw(y++, x, "%s turn", label);
+    attroff(COLOR_PAIR(color));
+
+    mvprintw(y++, x, "Coordinates: ");
     refresh();
     char buffer[5];
     echo();
@@ -80,6 +84,11 @@ int main() {
 
     // TODO: закинуть в отдельную функцию чтобы было понятнее.
     bool is_castling = piece.color == victim.color && piece.type == KING && victim.type == ROOK;
+
+    if (is_castling || piece.type == KING || piece.type == ROOK) {
+      turn == WHITE ? (can_white_castle = false) : (can_black_castle = false);
+    }
+
     if (is_castling) {
       int king_new_x = bx == 0 ? 2 : 6;
       int rook_new_x = bx == 0 ? 3 : 5;
