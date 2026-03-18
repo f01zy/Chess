@@ -36,9 +36,10 @@ void render_played_moves() {
     if (played_move.is_castling) {
       strcpy(buffer, "O-O-O\0");
     } else {
+      bool is_take = played_move.is_take || played_move.move_type == MOVE_EN_PASSANT;
       if (piece != ' ') buffer[curr++] = piece;
-      if (played_move.piece_type == PAWN && played_move.is_take) buffer[curr++] = ax;
-      if (played_move.is_take) buffer[curr++] = 'x';
+      if (played_move.piece_type == PAWN && is_take) buffer[curr++] = ax;
+      if (is_take) buffer[curr++] = 'x';
       buffer[curr++] = bx;
       buffer[curr++] = by;
       if (played_move.is_checkmate) buffer[curr++] = '#';
@@ -59,7 +60,6 @@ void render_board() {
   bool is_now_check = is_check(turn);
   bool is_now_checkmate = is_checkmate(turn);
 
-  clear();
   render_played_moves();
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
@@ -90,5 +90,4 @@ void render_board() {
       j == 0 && mvprintw(y, x - 1, "%d", 8 - i);
     }
   }
-  refresh();
 }

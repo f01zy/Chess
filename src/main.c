@@ -19,15 +19,16 @@ int main() {
   initialize_board();
 
   do {
+    clear();
     int rows, cols;
     getmaxyx(stdscr, rows, cols);
     if (cols < MIN_WIDTH || rows < MIN_HEIGHT) {
-      endwin();
-      printf("Your terminal too little. Minimum size is %dx%d\n", MIN_WIDTH, MIN_HEIGHT);
-      exit(1);
+      printw("Your terminal too little. Minimum size is %dx%d\n", MIN_WIDTH, MIN_HEIGHT);
+      refresh();
+      getch();
+      continue;
     }
 
-    render_board();
     char fromX, toX;
     int fromY, toY;
     int x = cols / 2 - 8;
@@ -40,15 +41,15 @@ int main() {
       break;
     }
 
-    // TODO: закинуть в отдельную функцию
-    char *label = turn == WHITE ? "White" : "Black";
+    // TODO: раскидать по методам.
+    render_board();
     int color = turn == WHITE ? 2 : 0;
     attron(COLOR_PAIR(color));
-    mvprintw(y++, x, "%s turn", label);
+    mvprintw(y++, x, "%s turn", turn == WHITE ? "White" : "Black");
     attroff(COLOR_PAIR(color));
-
     mvprintw(y++, x, "Coordinates: ");
     refresh();
+
     char buffer[5];
     echo();
     int count = getnstr(buffer, sizeof(buffer));
@@ -71,7 +72,6 @@ int main() {
     }
 
     execute_move(move, move_type);
-    save_played_move(move, move_type);
     turn = turn == WHITE ? BLACK : WHITE;
   } while (TRUE);
 

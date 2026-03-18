@@ -53,7 +53,6 @@ void execute_move(struct Move move, enum MoveType move_type) {
   struct Piece victim = board[move.by][move.bx];
 
   if (move_type == MOVE_CASTLING || piece.type == KING || piece.type == ROOK) { turn == WHITE ? (can_white_castle = false) : (can_black_castle = false); }
-
   if (move_type == MOVE_CASTLING) {
     int king_new_x = move.bx == 0 ? 2 : 6;
     int rook_new_x = move.bx == 0 ? 3 : 5;
@@ -61,36 +60,25 @@ void execute_move(struct Move move, enum MoveType move_type) {
     board[move.by][rook_new_x] = victim;
     board[move.by][move.bx] = (struct Piece){EMPTY, WHITE};
     board[move.ay][move.ax] = (struct Piece){EMPTY, WHITE};
-  } else if (move_type == MOVE_EN_PASSANT) {
-    int dirY = turn == WHITE ? -1 : 1;
-    int eaten_pawn_y = move.ay - dirY;
+  } else {
     board[move.by][move.bx] = piece;
     board[move.ay][move.ax] = (struct Piece){EMPTY, WHITE};
-    board[eaten_pawn_y][move.bx] = (struct Piece){EMPTY, WHITE};
-  } else if (move_type == MOVE_NORMAL) {
-    board[move.by][move.bx] = piece;
-    board[move.ay][move.ax] = (struct Piece){EMPTY, WHITE};
+    if (move_type == MOVE_EN_PASSANT) board[move.ay][move.bx] = (struct Piece){EMPTY, WHITE};
   }
+
+  save_played_move(move, move_type, piece, victim);
 }
 
-void save_played_move(struct Move move, enum MoveType move_type) {
-  struct Piece piece = board[move.ay][move.ax];
-  struct Piece victim = board[move.by][move.bx];
+void save_played_move(struct Move move, enum MoveType move_type, struct Piece piece, struct Piece victim) {
   enum Color opponent = turn == WHITE ? BLACK : WHITE;
-
-  bool is_now_check = is_check(opponent);
-  bool is_now_checkmate = is_checkmate(opponent);
-  bool is_take = victim.type == EMPTY ? false : true;
-  bool is_castling = move_type == MOVE_CASTLING;
-
   struct PlayedMove played_move;
   played_move.turn = turn;
   played_move.piece_type = piece.type;
   played_move.move_type = move_type;
-  played_move.is_check = is_now_check;
-  played_move.is_checkmate = is_now_checkmate;
-  played_move.is_take = is_take;
-  played_move.is_castling = is_castling;
+  played_move.is_check = is_check(opponent);
+  played_move.is_checkmate = is_checkmate(opponent);
+  played_move.is_take = victim.type != EMPTY;
+  played_move.is_castling = move_type == MOVE_CASTLING;
   played_move.ax = move.ax;
   played_move.ay = move.ay;
   played_move.bx = move.bx;
