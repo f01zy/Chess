@@ -19,16 +19,16 @@ bool is_attacked(struct Context *ctx, enum Color side, int x, int y) {
   return false;
 }
 
-// bool is_protecting(struct Context *ctx, enum Color side, struct Move move) {
-//   struct Piece piece = ctx->board[move.ay][move.ax];
-//   struct Piece victim = ctx->board[move.by][move.bx];
-//   ctx->board[move.by][move.bx] = piece;
-//   ctx->board[move.ay][move.ax] = (struct Piece){EMPTY, WHITE};
-//   bool is_protecting = is_check(ctx, side);
-//   ctx->board[move.by][move.bx] = victim;
-//   ctx->board[move.ay][move.ax] = piece;
-//   return is_protecting;
-// }
+bool is_protecting(struct Context *ctx, enum Color side, struct Move move) {
+  struct Piece piece           = ctx->board[move.ay][move.ax];
+  struct Piece victim          = ctx->board[move.by][move.bx];
+  ctx->board[move.by][move.bx] = piece;
+  ctx->board[move.ay][move.ax] = (struct Piece){EMPTY, WHITE};
+  bool is_protecting           = is_check(ctx, side);
+  ctx->board[move.by][move.bx] = victim;
+  ctx->board[move.ay][move.ax] = piece;
+  return is_protecting;
+}
 
 bool is_check(struct Context *ctx, enum Color side) {
   int x, y;

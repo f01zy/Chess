@@ -64,11 +64,15 @@ int main() {
       continue;
     }
 
-    // TODO: закончить и добавить is_protecting
-    struct Piece piece      = ctx.board[ay][ax];
-    struct Piece victim     = ctx.board[by][bx];
-    bool is_castling        = victim.color == ctx.turn && piece.type == KING && victim.type == ROOK;
-    enum MoveType move_type = is_castling ? check_castling(&ctx, ctx.turn, move) : check_move_validity(&ctx, ctx.turn, move);
+    struct Piece piece  = ctx.board[ay][ax];
+    struct Piece victim = ctx.board[by][bx];
+    bool is_castling    = victim.color == ctx.turn && piece.type == KING && victim.type == ROOK;
+    enum MoveType move_type;
+    if (is_protecting(&ctx, ctx.turn, move)) {
+      move_type = MOVE_INVALID;
+    } else {
+      move_type = is_castling ? check_castling(&ctx, ctx.turn, move) : check_move_validity(&ctx, ctx.turn, move);
+    }
 
     if (move_type == MOVE_INVALID) {
       mvprintw(y++, x, "The move is incorrent\n");

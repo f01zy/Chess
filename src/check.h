@@ -4,7 +4,7 @@
 #include "types.h"
 
 bool is_attacked(struct Context *ctx, enum Color side, int x, int y);
-// bool is_protecting(struct Context *ctx, enum Color side, struct Move move);
+bool is_protecting(struct Context *ctx, enum Color side, struct Move move);
 bool is_check(struct Context *ctx, enum Color side);
 bool is_checkmate(struct Context *ctx, enum Color side);
 bool check_coordinated_validity(struct Move move);
