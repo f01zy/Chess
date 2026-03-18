@@ -3,6 +3,7 @@
 
 #include "types.h"
 
+void render(struct Context *ctx);
 void render_played_moves(struct Context *ctx);
 void render_board(struct Context *ctx);
 

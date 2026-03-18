@@ -80,13 +80,11 @@ enum MoveType check_move_validity(struct Context *ctx, enum Color side, struct M
 };
 
 enum MoveType check_castling(struct Context *ctx, enum Color side, struct Move move) {
-  if (is_check(ctx, side)) return MOVE_INVALID;
   if ((side == WHITE && !ctx->can_white_castle) || (side == BLACK && !ctx->can_black_castle)) return MOVE_INVALID;
-
   int dirX = move.ax > move.bx ? -1 : 1;
-  for (int i = move.ax + dirX; i != move.bx; i += dirX) {
+  for (int i = move.ax; i != move.bx; i += dirX) {
     struct Piece piece = ctx->board[move.ay][i];
-    if (piece.type != EMPTY || is_attacked(ctx, side, i, move.ay)) return MOVE_INVALID;
+    if ((piece.type != EMPTY && piece.type != KING) || is_attacked(ctx, side, i, move.ay)) return MOVE_INVALID;
   }
   return MOVE_CASTLING;
 }

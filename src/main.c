@@ -21,7 +21,12 @@ int main() {
   do {
     clear();
     int rows, cols;
+    char fromX, toX;
+    int fromY, toY;
+    int x = cols / 2 - 8;
+    int y = rows / 2 + 6;
     getmaxyx(stdscr, rows, cols);
+
     if (cols < MIN_WIDTH || rows < MIN_HEIGHT) {
       printw("Your terminal too little. Minimum size is %dx%d\n", MIN_WIDTH, MIN_HEIGHT);
       refresh();
@@ -29,20 +34,9 @@ int main() {
       continue;
     }
 
-    char *color_label = ctx.turn == WHITE ? "White" : "Black";
-    char fromX, toX;
-    int fromY, toY;
-    int x = cols / 2 - 8;
-    int y = rows / 2 + 6;
-
-    render_board(&ctx);
-    int color = ctx.turn == WHITE ? 2 : 0;
-    attron(COLOR_PAIR(color));
-    mvprintw(y++, x, "%s turn", color_label);
-    attroff(COLOR_PAIR(color));
-
+    render(&ctx);
     if (is_checkmate(&ctx, ctx.turn)) {
-      mvprintw(y++, x, "%s lose", color_label);
+      mvprintw(y++, x, "%s lose", ctx.turn == WHITE ? "White" : "Black");
       refresh();
       getch();
       break;
@@ -54,9 +48,9 @@ int main() {
     echo();
     int count = getnstr(buffer, sizeof(buffer));
     noecho();
-
     if (strcmp(buffer, "q") == 0) { break; }
     sscanf(buffer, "%c%d-%c%d", &fromX, &fromY, &toX, &toY);
+
     int ax = fromX - 'a';
     int ay = 8 - fromY;
     int bx = toX - 'a';

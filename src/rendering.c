@@ -2,7 +2,6 @@
 #include <string.h>
 #include <wchar.h>
 
-#include "check.h"
 #include "rendering.h"
 #include "types.h"
 
@@ -18,6 +17,7 @@ void render_played_moves(struct Context *ctx) {
     char ax = 'a' + played_move.ax;
     char bx = 'a' + played_move.bx;
     char by = '0' + 8 - played_move.by;
+    int color = played_move.turn == WHITE ? 2 : 0;
     int curr = 0;
 
     // clang-format off
@@ -48,7 +48,9 @@ void render_played_moves(struct Context *ctx) {
 
     int x = 2;
     int y = i + 1;
+    attron(COLOR_PAIR(color));
     mvprintw(y, x, "%d. %s", j + 1, buffer);
+    attroff(COLOR_PAIR(color));
   }
 }
 
@@ -56,10 +58,14 @@ void render_board(struct Context *ctx) {
   int rows, cols;
   getmaxyx(stdscr, rows, cols);
 
-  bool is_now_check = is_check(ctx, ctx->turn);
-  bool is_now_checkmate = is_checkmate(ctx, ctx->turn);
+  bool is_now_check = false;
+  bool is_now_checkmate = false;
+  if (ctx->played_moves_count) {
+    struct PlayedMove previous_move = ctx->played_moves[ctx->played_moves_count - 1];
+    is_now_check = previous_move.is_check;
+    is_now_checkmate = previous_move.is_checkmate;
+  }
 
-  render_played_moves(ctx);
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
       struct Piece piece = ctx->board[i][j];
@@ -89,4 +95,9 @@ void render_board(struct Context *ctx) {
       j == 0 && mvprintw(y, x - 1, "%d", 8 - i);
     }
   }
+}
+
+void render(struct Context *ctx) {
+  render_played_moves(ctx);
+  render_board(ctx);
 }
