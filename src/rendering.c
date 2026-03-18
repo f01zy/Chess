@@ -3,17 +3,16 @@
 #include <wchar.h>
 
 #include "check.h"
-#include "globals.h"
 #include "rendering.h"
 #include "types.h"
 
-void render_played_moves() {
+void render_played_moves(struct Context *ctx) {
   int rows, cols;
-  int start = MAX(played_moves_count - DRAW_MOVES, 0);
+  int start = MAX(ctx->played_moves_count - DRAW_MOVES, 0);
   getmaxyx(stdscr, rows, cols);
 
-  for (int i = 0, j = start; j < played_moves_count && j < rows; i++, j++) {
-    struct PlayedMove played_move = played_moves[j];
+  for (int i = 0, j = start; j < ctx->played_moves_count && j < rows; i++, j++) {
+    struct PlayedMove played_move = ctx->played_moves[j];
     char piece;
     char buffer[10];
     char ax = 'a' + played_move.ax;
@@ -53,21 +52,21 @@ void render_played_moves() {
   }
 }
 
-void render_board() {
+void render_board(struct Context *ctx) {
   int rows, cols;
   getmaxyx(stdscr, rows, cols);
 
-  bool is_now_check = is_check(turn);
-  bool is_now_checkmate = is_checkmate(turn);
+  bool is_now_check = is_check(ctx);
+  bool is_now_checkmate = is_checkmate(ctx);
 
-  render_played_moves();
+  render_played_moves(ctx);
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      struct Piece piece = board[i][j];
+      struct Piece piece = ctx->board[i][j];
       wchar_t ch = ' ';
 
       int color = 0;
-      if (piece.type == KING && piece.color == turn && is_now_check) { color = 1; }
+      if (piece.type == KING && piece.color == ctx->turn && is_now_check) { color = 1; }
 
       // clang-format off
       switch (piece.type) {

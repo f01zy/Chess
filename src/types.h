@@ -1,6 +1,7 @@
 #ifndef TYPES_H_INCLUDED
 #define TYPES_H_INCLUDED
 
+#include "defines.h"
 #include <stdbool.h>
 
 enum PieceType { EMPTY, PAWN, KING, QUEEN, ROOK, BISHOP, KNIGHT };
@@ -31,6 +32,15 @@ struct PlayedMove {
   int ay;
   int bx;
   int by;
+};
+
+struct Context {
+  enum Color turn;
+  struct Piece board[8][8];
+  struct PlayedMove played_moves[MAX_MOVES];
+  int played_moves_count;
+  bool can_white_castle;
+  bool can_black_castle;
 };
 
 #endif

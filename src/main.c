@@ -1,9 +1,9 @@
 #include <locale.h>
 #include <ncurses.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "check.h"
+#include "defines.h"
 #include "globals.h"
 #include "rendering.h"
 #include "types.h"
@@ -15,8 +15,8 @@ int main() {
   noecho();
   cbreak();
   keypad(stdscr, TRUE);
+  initialize_context(&ctx);
   initialize_colors();
-  initialize_board();
 
   do {
     clear();
@@ -29,23 +29,24 @@ int main() {
       continue;
     }
 
+    char *color_label = ctx.turn == WHITE ? "White" : "Black";
     char fromX, toX;
     int fromY, toY;
     int x = cols / 2 - 8;
     int y = rows / 2 + 6;
 
-    if (is_checkmate(turn)) {
-      mvprintw(y++, x, "%s lose", turn == WHITE ? "White" : "Black");
+    if (is_checkmate(&ctx)) {
+      mvprintw(y++, x, "%s lose", color_label);
       refresh();
       getch();
       break;
     }
 
     // TODO: раскидать по методам.
-    render_board();
-    int color = turn == WHITE ? 2 : 0;
+    render_board(&ctx);
+    int color = ctx.turn == WHITE ? 2 : 0;
     attron(COLOR_PAIR(color));
-    mvprintw(y++, x, "%s turn", turn == WHITE ? "White" : "Black");
+    mvprintw(y++, x, "%s turn", color_label);
     attroff(COLOR_PAIR(color));
     mvprintw(y++, x, "Coordinates: ");
     refresh();
@@ -62,8 +63,9 @@ int main() {
     int bx = toX - 'a';
     int by = 8 - toY;
 
+    // TODO: добавить дополнительную проверку, что после хода королю не откроется шах, так как эта фигура могла ему препятствовать.
     struct Move move = {ax, ay, bx, by};
-    enum MoveType move_type = check_move_validity(turn, move);
+    enum MoveType move_type = check_move_validity(&ctx, move);
     if (move_type == MOVE_INVALID) {
       mvprintw(y++, x, "The move is incorrent\n");
       refresh();
@@ -71,8 +73,8 @@ int main() {
       continue;
     }
 
-    execute_move(move, move_type);
-    turn = turn == WHITE ? BLACK : WHITE;
+    execute_move(&ctx, move, move_type);
+    change_turn(&ctx);
   } while (TRUE);
 
   endwin();
