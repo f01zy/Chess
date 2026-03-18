@@ -14,11 +14,11 @@ void render_played_moves(struct Context *ctx) {
     struct PlayedMove played_move = ctx->played_moves[j];
     char piece;
     char buffer[10];
-    char ax = 'a' + played_move.ax;
-    char bx = 'a' + played_move.bx;
-    char by = '0' + 8 - played_move.by;
+    char ax   = 'a' + played_move.ax;
+    char bx   = 'a' + played_move.bx;
+    char by   = '0' + 8 - played_move.by;
     int color = played_move.turn == WHITE ? 2 : 0;
-    int curr = 0;
+    int curr  = 0;
 
     // clang-format off
     switch (played_move.piece_type) {
@@ -41,8 +41,7 @@ void render_played_moves(struct Context *ctx) {
       if (is_take) buffer[curr++] = 'x';
       buffer[curr++] = bx;
       buffer[curr++] = by;
-      if (played_move.is_checkmate) buffer[curr++] = '#';
-      if (!played_move.is_checkmate && played_move.is_check) buffer[curr++] = '+';
+      played_move.is_checkmate ? buffer[curr++] = '#' : played_move.is_check ? buffer[curr++] = '+' : 0;
       buffer[curr] = '\0';
     }
 
@@ -58,18 +57,18 @@ void render_board(struct Context *ctx) {
   int rows, cols;
   getmaxyx(stdscr, rows, cols);
 
-  bool is_now_check = false;
+  bool is_now_check     = false;
   bool is_now_checkmate = false;
   if (ctx->played_moves_count) {
     struct PlayedMove previous_move = ctx->played_moves[ctx->played_moves_count - 1];
-    is_now_check = previous_move.is_check;
-    is_now_checkmate = previous_move.is_checkmate;
+    is_now_check                    = previous_move.is_check;
+    is_now_checkmate                = previous_move.is_checkmate;
   }
 
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
       struct Piece piece = ctx->board[i][j];
-      wchar_t ch = ' ';
+      wchar_t ch         = ' ';
 
       int color = 0;
       if (piece.type == KING && piece.color == ctx->turn && is_now_check) { color = 1; }

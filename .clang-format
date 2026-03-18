@@ -6,5 +6,12 @@ AlignConsecutiveMacros:
   AcrossEmptyLines: true
   AcrossComments: true
 
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: true
+  AlignCompound: true
+
 AllowShortIfStatementsOnASingleLine: Always
 AllowShortBlocksOnASingleLine: Always
+AllowShortFunctionsOnASingleLine: All

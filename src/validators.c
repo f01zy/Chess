@@ -5,9 +5,9 @@
 #include "validators.h"
 
 enum MoveType validate_pawn(struct Context *ctx, struct Move move) {
-  int dirY = move.ay == move.by ? 0 : move.ay > move.by ? -1 : 1;
-  int moveX = abs(move.ax - move.bx);
-  int moveY = abs(move.ay - move.by);
+  int dirY        = move.ay == move.by ? 0 : move.ay > move.by ? -1 : 1;
+  int moveX       = abs(move.ax - move.bx);
+  int moveY       = abs(move.ay - move.by);
   int max_advence = (move.ay == 1 || move.ay == 6) ? 2 : 1;
 
   struct Piece victim = ctx->board[move.by][move.bx];
@@ -35,7 +35,7 @@ enum MoveType validate_king(struct Context *ctx, struct Move move) {
 };
 
 enum MoveType validate_queen(struct Context *ctx, struct Move move) {
-  enum MoveType is_rook = validate_rook(ctx, move);
+  enum MoveType is_rook   = validate_rook(ctx, move);
   enum MoveType is_bishop = validate_bishop(ctx, move);
   if (is_rook != MOVE_INVALID) return is_rook;
   if (is_bishop != MOVE_INVALID) return is_bishop;

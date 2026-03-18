@@ -6,7 +6,7 @@ Simple console chess engine. Just for fun. Plan to do it online in the future.
 
 ## Run Locally
 
-run it locally with cmake
+Run it locally with cmake
 
 ```bash
 mkdir build

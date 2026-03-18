@@ -57,7 +57,19 @@ int main() {
     int by = 8 - toY;
 
     struct Move move = {ax, ay, bx, by};
-    enum MoveType move_type = check_move_validity(&ctx, ctx.turn, move);
+    if (!check_coordinated_validity(move)) {
+      mvprintw(y++, x, "The coordinates is invalid\n");
+      refresh();
+      getch();
+      continue;
+    }
+
+    // TODO: закончить и добавить is_protecting
+    struct Piece piece      = ctx.board[ay][ax];
+    struct Piece victim     = ctx.board[by][bx];
+    bool is_castling        = victim.color == ctx.turn && piece.type == KING && victim.type == ROOK;
+    enum MoveType move_type = is_castling ? check_castling(&ctx, ctx.turn, move) : check_move_validity(&ctx, ctx.turn, move);
+
     if (move_type == MOVE_INVALID) {
       mvprintw(y++, x, "The move is incorrent\n");
       refresh();
