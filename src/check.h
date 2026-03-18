@@ -3,11 +3,11 @@
 
 #include "types.h"
 
-bool is_attacked(struct Context *ctx, int x, int y);
-bool is_protecting(struct Context *ctx, struct Move move);
-bool is_check(struct Context *ctx);
-bool is_checkmate(struct Context *ctx);
-enum MoveType check_castling(struct Context *ctx, struct Move move);
-enum MoveType check_move_validity(struct Context *ctx, struct Move move);
+bool is_attacked(struct Context *ctx, enum Color side, int x, int y);
+bool is_protecting(struct Context *ctx, enum Color side, struct Move move);
+bool is_check(struct Context *ctx, enum Color side);
+bool is_checkmate(struct Context *ctx, enum Color side);
+enum MoveType check_castling(struct Context *ctx, enum Color side, struct Move move);
+enum MoveType check_move_validity(struct Context *ctx, enum Color side, struct Move move);
 
 #endif

@@ -15,11 +15,11 @@ void initialize_context(struct Context *ctx) {
   initialize_board(ctx);
 }
 
-void get_king_position(struct Context *ctx, int *x, int *y) {
+void get_king_position(struct Context *ctx, enum Color side, int *x, int *y) {
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
       struct Piece piece = ctx->board[i][j];
-      if (piece.type == KING && piece.color == ctx->turn) {
+      if (piece.type == KING && piece.color == side) {
         *y = i;
         *x = j;
         return;
@@ -84,14 +84,13 @@ void execute_move(struct Context *ctx, struct Move move, enum MoveType move_type
 }
 
 void save_played_move(struct Context *ctx, struct Move move, enum MoveType move_type, struct Piece piece, struct Piece victim) {
+  enum Color opponent = ctx->turn == WHITE ? BLACK : WHITE;
   struct PlayedMove played_move;
   played_move.turn = ctx->turn;
   played_move.piece_type = piece.type;
   played_move.move_type = move_type;
-  change_turn(ctx);
-  played_move.is_check = is_check(ctx);
-  played_move.is_checkmate = is_checkmate(ctx);
-  change_turn(ctx);
+  played_move.is_check = is_check(ctx, opponent);
+  played_move.is_checkmate = is_checkmate(ctx, opponent);
   played_move.is_take = victim.type != EMPTY;
   played_move.is_castling = move_type == MOVE_CASTLING;
   played_move.ax = move.ax;

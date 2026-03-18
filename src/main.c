@@ -35,22 +35,21 @@ int main() {
     int x = cols / 2 - 8;
     int y = rows / 2 + 6;
 
-    if (is_checkmate(&ctx)) {
+    render_board(&ctx);
+    int color = ctx.turn == WHITE ? 2 : 0;
+    attron(COLOR_PAIR(color));
+    mvprintw(y++, x, "%s turn", color_label);
+    attroff(COLOR_PAIR(color));
+
+    if (is_checkmate(&ctx, ctx.turn)) {
       mvprintw(y++, x, "%s lose", color_label);
       refresh();
       getch();
       break;
     }
 
-    // TODO: раскидать по методам.
-    render_board(&ctx);
-    int color = ctx.turn == WHITE ? 2 : 0;
-    attron(COLOR_PAIR(color));
-    mvprintw(y++, x, "%s turn", color_label);
-    attroff(COLOR_PAIR(color));
     mvprintw(y++, x, "Coordinates: ");
     refresh();
-
     char buffer[5];
     echo();
     int count = getnstr(buffer, sizeof(buffer));
@@ -63,9 +62,8 @@ int main() {
     int bx = toX - 'a';
     int by = 8 - toY;
 
-    // TODO: добавить дополнительную проверку, что после хода королю не откроется шах, так как эта фигура могла ему препятствовать.
     struct Move move = {ax, ay, bx, by};
-    enum MoveType move_type = check_move_validity(&ctx, move);
+    enum MoveType move_type = check_move_validity(&ctx, ctx.turn, move);
     if (move_type == MOVE_INVALID) {
       mvprintw(y++, x, "The move is incorrent\n");
       refresh();

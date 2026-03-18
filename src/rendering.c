@@ -56,8 +56,8 @@ void render_board(struct Context *ctx) {
   int rows, cols;
   getmaxyx(stdscr, rows, cols);
 
-  bool is_now_check = is_check(ctx);
-  bool is_now_checkmate = is_checkmate(ctx);
+  bool is_now_check = is_check(ctx, ctx->turn);
+  bool is_now_checkmate = is_checkmate(ctx, ctx->turn);
 
   render_played_moves(ctx);
   for (int i = 0; i < 8; i++) {
