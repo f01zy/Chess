@@ -2,8 +2,8 @@
 #include <string.h>
 #include <wchar.h>
 
+#include "../types.h"
 #include "rendering.h"
-#include "types.h"
 
 void render_played_moves(struct Context *ctx) {
   int rows, cols;
@@ -17,7 +17,7 @@ void render_played_moves(struct Context *ctx) {
     char ax   = 'a' + played_move.ax;
     char bx   = 'a' + played_move.bx;
     char by   = '0' + 8 - played_move.by;
-    int color = played_move.turn == WHITE ? 2 : 0;
+    int color = played_move.turn == WHITE ? BLACK_ON_WHITE : WHITE_ON_BLACK;
     int curr  = 0;
 
     // clang-format off
@@ -70,8 +70,8 @@ void render_board(struct Context *ctx) {
       struct Piece piece = ctx->board[i][j];
       wchar_t ch         = ' ';
 
-      int color = 0;
-      if (piece.type == KING && piece.color == ctx->turn && is_now_check) { color = 1; }
+      int color = WHITE_ON_BLACK;
+      if (piece.type == KING && piece.color == ctx->turn && is_now_check) { color = WHITE_ON_RED; }
 
       // clang-format off
       switch (piece.type) {

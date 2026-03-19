@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "types.h"
+#include "../types.h"
 #include "validators.h"
 
 enum MoveType validate_pawn(struct Context *ctx, struct Move move) {

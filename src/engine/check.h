@@ -1,7 +1,7 @@
 #ifndef CHECK_H_INCLUDED
 #define CHECK_H_INCLUDED
 
-#include "types.h"
+#include "../types.h"
 
 bool is_attacked(struct Context *ctx, enum Color side, int x, int y);
 bool is_check(struct Context *ctx, enum Color side);

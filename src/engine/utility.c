@@ -1,9 +1,8 @@
 #include <ncurses.h>
-#include <stdlib.h>
 #include <string.h>
 
+#include "../types.h"
 #include "check.h"
-#include "types.h"
 #include "utility.h"
 
 void initialize_context(struct Context *ctx) {
@@ -29,24 +28,6 @@ void get_king_position(struct Context *ctx, enum Color side, int *x, int *y) {
 }
 
 void change_turn(struct Context *ctx) { ctx->turn = ctx->turn == WHITE ? BLACK : WHITE; }
-
-void error_message(int x, int y, char *error) {
-  mvprintw(y, x, "%s\n", error);
-  refresh();
-  getch();
-}
-
-void initialize_colors() {
-  if (has_colors() == FALSE) {
-    endwin();
-    printf("Your terminal does not support color\n");
-    exit(1);
-  }
-  start_color();
-  init_pair(0, COLOR_WHITE, COLOR_BLACK);
-  init_pair(1, COLOR_WHITE, COLOR_RED);
-  init_pair(2, COLOR_BLACK, COLOR_WHITE);
-}
 
 void initialize_board(struct Context *ctx) {
   for (int i = 0; i < 8; i++) {

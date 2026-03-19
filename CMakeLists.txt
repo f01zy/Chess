@@ -3,11 +3,13 @@ project(chess)
 
 set(SOURCE 
   ./src/main.c
-  ./src/check.c
-  ./src/rendering.c
-  ./src/utility.c
-  ./src/validators.c
   ./src/globals.c
+  ./src/engine/check.c
+  ./src/engine/utility.c
+  ./src/engine/validators.c
+  ./src/game/rendering.c
+  ./src/game/game.c
+  ./src/game/ui.c
 )
 
 add_executable(main ${SOURCE})

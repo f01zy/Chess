@@ -1,7 +1,7 @@
 #ifndef VALIDATORS_H_INCLUDED
 #define VALIDATORS_H_INCLUDED
 
-#include "types.h"
+#include "../types.h"
 
 enum MoveType validate_pawn(struct Context *ctx, struct Move move);
 enum MoveType validate_king(struct Context *ctx, struct Move move);
