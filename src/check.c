@@ -19,17 +19,6 @@ bool is_attacked(struct Context *ctx, enum Color side, int x, int y) {
   return false;
 }
 
-bool is_protecting(struct Context *ctx, enum Color side, struct Move move) {
-  struct Piece piece           = ctx->board[move.ay][move.ax];
-  struct Piece victim          = ctx->board[move.by][move.bx];
-  ctx->board[move.by][move.bx] = piece;
-  ctx->board[move.ay][move.ax] = (struct Piece){EMPTY, WHITE};
-  bool is_protecting           = is_check(ctx, side);
-  ctx->board[move.by][move.bx] = victim;
-  ctx->board[move.ay][move.ax] = piece;
-  return is_protecting;
-}
-
 bool is_check(struct Context *ctx, enum Color side) {
   int x, y;
   get_king_position(ctx, side, &x, &y);
@@ -64,14 +53,13 @@ bool is_checkmate(struct Context *ctx, enum Color side) {
   return true;
 }
 
-bool check_coordinated_validity(struct Move move) {
+bool check_coordinates_validity(struct Move move) {
   if ((move.ay < 0 || move.ay > 7) || (move.by < 0 || move.by > 7) || (move.ax < 0 || move.ax > 7) || (move.bx < 0 || move.bx > 7)) return false;
   if (move.ax == move.bx && move.ay == move.by) return false;
   return true;
 }
 
 enum MoveType check_move_validity(struct Context *ctx, enum Color side, struct Move move) {
-  // TODO: везде, где используется структура Move сделать доп проверку через check_coordinated_validity
   struct Piece piece  = ctx->board[move.ay][move.ax];
   struct Piece victim = ctx->board[move.by][move.bx];
 
@@ -98,7 +86,8 @@ enum MoveType check_castling(struct Context *ctx, enum Color side, struct Move m
   int dirX = move.ax > move.bx ? -1 : 1;
   for (int i = move.ax; i != move.bx; i += dirX) {
     struct Piece piece = ctx->board[move.ay][i];
-    if ((piece.type != EMPTY && piece.type != KING) || is_attacked(ctx, side, i, move.ay)) return MOVE_INVALID;
+    if (piece.type != EMPTY && i != move.ax) return MOVE_INVALID;
+    if (is_attacked(ctx, side, i, move.ay)) return MOVE_INVALID;
   }
   return MOVE_CASTLING;
 }

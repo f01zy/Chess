@@ -48,7 +48,7 @@ void render_played_moves(struct Context *ctx) {
     int x = 2;
     int y = i + 1;
     attron(COLOR_PAIR(color));
-    mvprintw(y, x, "%d. %s", j + 1, buffer);
+    mvprintw(y, x, "%d. %s\n", j + 1, buffer);
     attroff(COLOR_PAIR(color));
   }
 }

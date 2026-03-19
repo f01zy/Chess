@@ -4,10 +4,10 @@
 #include "types.h"
 
 bool is_attacked(struct Context *ctx, enum Color side, int x, int y);
-bool is_protecting(struct Context *ctx, enum Color side, struct Move move);
 bool is_check(struct Context *ctx, enum Color side);
 bool is_checkmate(struct Context *ctx, enum Color side);
-bool check_coordinated_validity(struct Move move);
+
+bool check_coordinates_validity(struct Move move);
 enum MoveType check_castling(struct Context *ctx, enum Color side, struct Move move);
 enum MoveType check_move_validity(struct Context *ctx, enum Color side, struct Move move);
 

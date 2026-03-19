@@ -30,6 +30,12 @@ void get_king_position(struct Context *ctx, enum Color side, int *x, int *y) {
 
 void change_turn(struct Context *ctx) { ctx->turn = ctx->turn == WHITE ? BLACK : WHITE; }
 
+void error_message(int x, int y, char *error) {
+  mvprintw(y, x, "%s\n", error);
+  refresh();
+  getch();
+}
+
 void initialize_colors() {
   if (has_colors() == FALSE) {
     endwin();
@@ -79,8 +85,25 @@ void execute_move(struct Context *ctx, struct Move move, enum MoveType move_type
     ctx->board[move.ay][move.ax] = (struct Piece){EMPTY, WHITE};
     if (move_type == MOVE_EN_PASSANT) ctx->board[move.ay][move.bx] = (struct Piece){EMPTY, WHITE};
   }
+}
 
-  save_played_move(ctx, move, move_type, piece, victim);
+void undo_move(struct Context *ctx, struct Move move, enum MoveType move_type, struct Piece piece, struct Piece victim) {
+  enum Color opponent = ctx->turn == WHITE ? BLACK : WHITE;
+  if (move_type == MOVE_CASTLING || piece.type == KING || piece.type == ROOK) {
+    ctx->turn == WHITE ? (ctx->can_white_castle = true) : (ctx->can_black_castle = true);
+  }
+
+  ctx->board[move.ay][move.ax] = piece;
+  ctx->board[move.by][move.bx] = victim;
+
+  if (move_type == MOVE_CASTLING) {
+    int king_x                  = move.bx == 0 ? 2 : 6;
+    int rook_x                  = move.bx == 0 ? 3 : 5;
+    ctx->board[move.by][king_x] = (struct Piece){EMPTY, WHITE};
+    ctx->board[move.by][rook_x] = (struct Piece){EMPTY, WHITE};
+  } else if (move_type == MOVE_EN_PASSANT) {
+    ctx->board[move.ay][move.bx] = (struct Piece){PAWN, opponent};
+  }
 }
 
 void save_played_move(struct Context *ctx, struct Move move, enum MoveType move_type, struct Piece piece, struct Piece victim) {
