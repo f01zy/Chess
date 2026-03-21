@@ -10,9 +10,13 @@ set(SOURCE
   ./src/game/rendering.c
   ./src/game/game.c
   ./src/game/ui.c
+  ./src/network/socket.c
+  ./third_party/mongoose/mongoose.c
 )
 
 add_executable(main ${SOURCE})
 find_package(Curses REQUIRED)
+
 include_directories(${CURSES_INCLUDE_DIR})
-target_link_libraries(main ${CURSES_LIBRARY})
+include_directories(./third_party/mongoose)
+target_link_libraries(main PRIVATE ${CURSES_LIBRARY})

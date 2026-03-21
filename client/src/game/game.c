@@ -1,3 +1,4 @@
+#include <mongoose.h>
 #include <ncurses.h>
 #include <string.h>
 
@@ -5,6 +6,7 @@
 #include "../engine/check.h"
 #include "../engine/utility.h"
 #include "../globals.h"
+#include "../network/socket.h"
 #include "../types.h"
 #include "game.h"
 #include "rendering.h"
@@ -21,7 +23,10 @@ void game_menu() {
 
 void game_start() {
   initialize_context(&ctx);
+  connect_to_server();
+
   do {
+    mg_mgr_poll(&mgr, 0);
     clear();
     int rows, cols;
     getmaxyx(stdscr, rows, cols);
@@ -96,5 +101,8 @@ void game_start() {
 
     save_played_move(&ctx, move, move_type, piece, victim);
     change_turn(&ctx);
+    mg_ws_send(c, buffer, strlen(buffer), WEBSOCKET_OP_TEXT);
   } while (1);
+
+  disconnect_from_server();
 }

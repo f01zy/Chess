@@ -1,6 +1,10 @@
 #ifndef DEFINES_H_INCLUDED
 #define DEFINES_H_INCLUDED
 
+#define SERVER_IP        "localhost"
+#define SERVER_PORT      "3000"
+#define SERVER_URL       "http://" SERVER_IP ":" SERVER_PORT
+
 #define MAX_MENU_OPTIONS 10
 #define DRAW_MOVES       12
 #define MAX_MOVES        1000

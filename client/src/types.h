@@ -2,6 +2,7 @@
 #define TYPES_H_INCLUDED
 
 #include "defines.h"
+#include "mongoose.h"
 #include <stdbool.h>
 
 enum PieceType { EMPTY, PAWN, KING, QUEEN, ROOK, BISHOP, KNIGHT };
