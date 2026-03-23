@@ -7,6 +7,7 @@
 
 void initialize_context(struct Context *ctx) {
   memset(ctx, 0, sizeof(struct Context));
+  ctx->side               = WHITE;
   ctx->turn               = WHITE;
   ctx->played_moves_count = 0;
   ctx->can_white_castle   = true;

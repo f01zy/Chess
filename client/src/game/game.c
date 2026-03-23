@@ -1,6 +1,7 @@
 #include <mongoose.h>
 #include <ncurses.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "../defines.h"
 #include "../engine/check.h"
@@ -12,22 +13,31 @@
 #include "rendering.h"
 #include "ui.h"
 
-void game_menu() {
-  char *options[MAX_MENU_OPTIONS] = {"Start", "Exit"};
-  while (1) {
-    int option = menu(options, 2);
-    if (option == 0) game_start();
-    if (option == 1) return;
+void searching() {
+  connect_to_server();
+  while (scene == Searching) {
+    clear();
+    printw("Searching for opponent...");
+    refresh();
+    mg_mgr_poll(&mgr, 100);
   }
 }
 
-void game_start() {
-  initialize_context(&ctx);
-  connect_to_server();
+void lobby() {
+  char *options[MAX_MENU_OPTIONS] = {"Start", "Exit"};
+  while (scene == Lobby) {
+    int option = menu(options, 2);
+    if (option == 0) scene = Searching;
+    if (option == 1) scene = Exit;
+  }
+}
 
-  do {
-    mg_mgr_poll(&mgr, 0);
+void game() {
+  initialize_context(&ctx);
+  while (scene == Game) {
+    mg_mgr_poll(&mgr, 100);
     clear();
+
     int rows, cols;
     getmaxyx(stdscr, rows, cols);
     char fromX, toX;
@@ -57,7 +67,11 @@ void game_start() {
     echo();
     int count = getnstr(buffer, sizeof(buffer));
     noecho();
-    if (strcmp(buffer, "q") == 0) { break; }
+    if (strcmp(buffer, "q") == 0) {
+      disconnect_from_server();
+      scene = Lobby;
+      break;
+    }
     sscanf(buffer, "%c%d-%c%d", &fromX, &fromY, &toX, &toY);
 
     int ax = fromX - 'a';
@@ -101,8 +115,6 @@ void game_start() {
 
     save_played_move(&ctx, move, move_type, piece, victim);
     change_turn(&ctx);
-    mg_ws_send(c, buffer, strlen(buffer), WEBSOCKET_OP_TEXT);
-  } while (1);
-
-  disconnect_from_server();
+    send_move(buffer);
+  }
 }

@@ -5,5 +5,6 @@
 
 void connect_to_server();
 void disconnect_from_server();
+void send_move(const char *move);
 
 #endif

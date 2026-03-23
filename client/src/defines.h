@@ -3,7 +3,7 @@
 
 #define SERVER_IP        "localhost"
 #define SERVER_PORT      "3000"
-#define SERVER_URL       "http://" SERVER_IP ":" SERVER_PORT
+#define SERVER_URL       "ws://" SERVER_IP ":" SERVER_PORT
 
 #define MAX_MENU_OPTIONS 10
 #define DRAW_MOVES       12

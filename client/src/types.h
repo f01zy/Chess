@@ -2,12 +2,12 @@
 #define TYPES_H_INCLUDED
 
 #include "defines.h"
-#include "mongoose.h"
 #include <stdbool.h>
 
 enum PieceType { EMPTY, PAWN, KING, QUEEN, ROOK, BISHOP, KNIGHT };
 enum Color { WHITE, BLACK };
 enum MoveType { MOVE_NORMAL, MOVE_PAWN_DOUBLE, MOVE_EN_PASSANT, MOVE_CASTLING, MOVE_PROMOTION, MOVE_INVALID };
+enum Scene { Exit, Lobby, Searching, Game };
 
 struct Piece {
   enum PieceType type;
@@ -36,6 +36,7 @@ struct PlayedMove {
 };
 
 struct Context {
+  enum Color side;
   enum Color turn;
   struct Piece board[8][8];
   struct PlayedMove played_moves[MAX_MOVES];

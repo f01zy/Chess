@@ -3,6 +3,8 @@
 #include <stdlib.h>
 
 #include "game/game.h"
+#include "globals.h"
+#include "types.h"
 
 void initialize_colors() {
   if (has_colors() == FALSE) {
@@ -23,6 +25,17 @@ int main() {
   cbreak();
   keypad(stdscr, TRUE);
   initialize_colors();
-  game_menu();
+
+  while (1) {
+    // clang-format off
+    switch (scene) {
+      case Lobby:     lobby();
+      case Searching: searching();
+      case Game:      game();
+      case Exit:      break;
+    }
+    // clang-format on
+  }
+
   endwin();
 }
