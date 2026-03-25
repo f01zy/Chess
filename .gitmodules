@@ -1,0 +1,3 @@
+[submodule "client/third_party/cjson"]
+	path = client/third_party/cjson
+	url = https://github.com/davegamble/cjson

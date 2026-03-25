@@ -39,6 +39,13 @@ void game() {
     int x = cols / 2 - 8;
     int y = rows / 2 + 6;
 
+    if (is_checkmate(&ctx, ctx.turn)) {
+      mvprintw(y++, x, "%s lose\n", ctx.turn == WHITE ? "White" : "Black");
+      refresh();
+      getch();
+      break;
+    }
+
     if (cols < MIN_WIDTH || rows < MIN_HEIGHT) {
       printw("Your terminal too little. Minimum size is %dx%d\n", MIN_WIDTH, MIN_HEIGHT);
       refresh();
@@ -58,13 +65,6 @@ void game() {
     render(&ctx);
     mvprintw(y++, x, "Coordinates: ");
     refresh();
-
-    if (is_checkmate(&ctx, ctx.turn)) {
-      mvprintw(y++, x, "%s lose\n", ctx.turn == WHITE ? "White" : "Black");
-      refresh();
-      getch();
-      break;
-    }
 
     int ax, ay, bx, by;
     if (!get_coordinates(&ax, &ay, &bx, &by)) {
@@ -111,7 +111,6 @@ void game() {
       ctx.turn == WHITE ? (ctx.can_white_castle = false) : (ctx.can_black_castle = false);
     }
 
-    save_played_move(&ctx, move, move_type, piece, victim);
     send_move(move, move_type);
   }
 }

@@ -15,8 +15,16 @@ set(SOURCE
 )
 
 add_executable(main ${SOURCE})
+add_subdirectory(./third_party/cjson)
 find_package(Curses REQUIRED)
 
-include_directories(${CURSES_INCLUDE_DIR})
-include_directories(./third_party/mongoose)
-target_link_libraries(main PRIVATE ${CURSES_LIBRARY})
+target_include_directories(main PRIVATE
+  ${CURSES_INCLUDE_DIR}
+  ./third_party/cjson
+  ./third_party/mongoose
+)
+
+target_link_libraries(main PRIVATE 
+  ${CURSES_LIBRARY}
+  cjson
+)

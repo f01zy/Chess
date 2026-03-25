@@ -58,11 +58,11 @@ const server = Bun.serve({
   },
   websocket: {
     data: {} as WebSocketData,
-    async message(ws, message) {
+    async message(ws, message: string) {
       let json;
 
       try {
-        json = JSON.parse(message as string);
+        json = JSON.parse(message);
       } catch { return };
 
       switch (json.type) {
@@ -73,7 +73,7 @@ const server = Bun.serve({
           disconnect(ws);
           break;
         case "move":
-          move(ws, json.move);
+          move(ws, message);
           break;
       }
     },

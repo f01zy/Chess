@@ -1,6 +1,6 @@
+#include <cJSON.h>
 #include <mongoose.h>
 #include <ncurses.h>
-#include <stdio.h>
 
 #include "../defines.h"
 #include "../engine/utility.h"
@@ -12,30 +12,35 @@ bool is_connected = false;
 static void handler(struct mg_connection *c, int ev, void *ev_data) {
   if (ev == MG_EV_WS_MSG) {
     struct mg_ws_message *wm = (struct mg_ws_message *)ev_data;
-    struct mg_str json       = mg_str(wm->data.buf);
-    char *type               = mg_json_get_str(json, "$.type");
+    cJSON *json              = cJSON_ParseWithLength(wm->data.buf, wm->data.len);
+    char *type               = cJSON_GetObjectItem(json, "type")->valuestring;
+
     if (!strcmp(type, "opponent_found")) {
-      enum Color side = mg_json_get_long(json, "$.side", 0);
+      enum Color side = cJSON_GetObjectItem(json, "side")->valueint;
       initialize_context(&ctx);
       ctx.side = side;
       scene    = Game;
     }
     if (!strcmp(type, "move")) {
-      is_waiting_for_move = false;
-      change_turn(&ctx);
-      enum Color side = mg_json_get_long(json, "$.side", 0);
-      if (side == ctx.side) { return; }
-
-      enum MoveType move_type = mg_json_get_long(json, "$.move_type", 0);
-      long ax                 = mg_json_get_long(json, "$.ax", 0);
-      long ay                 = mg_json_get_long(json, "$.ay", 0);
-      long bx                 = mg_json_get_long(json, "$.bx", 0);
-      long by                 = mg_json_get_long(json, "$.by", 0);
+      // TODO: у отправителя фигура в пизду улетает
+      enum Color side         = cJSON_GetObjectItem(json, "side")->valueint;
+      enum MoveType move_type = cJSON_GetObjectItem(json, "move_type")->valueint;
+      int ax                  = cJSON_GetObjectItem(json, "ax")->valueint;
+      int ay                  = cJSON_GetObjectItem(json, "ay")->valueint;
+      int bx                  = cJSON_GetObjectItem(json, "bx")->valueint;
+      int by                  = cJSON_GetObjectItem(json, "by")->valueint;
       struct Move move        = {ax, ay, bx, by};
+      struct Piece piece      = ctx.board[ay][ax];
+      struct Piece victim     = ctx.board[by][bx];
       execute_move(&ctx, move, move_type);
+      save_played_move(&ctx, side, move, move_type, piece, victim);
+      change_turn(&ctx);
+      is_waiting_for_move = false;
     }
     if (!strcmp(type, "connected")) { is_connected = true; }
     if (!strcmp(type, "disconnected")) { scene = Lobby; }
+
+    cJSON_Delete(json);
   }
 }
 
@@ -52,10 +57,19 @@ void initialize_mongoose() {
 }
 
 void send_move(struct Move move, enum MoveType move_type) {
-  char buffer[256];
-  snprintf(buffer, sizeof(buffer), "{\"type\":\"move\",\"side\":%d,\"move_type\":%d,\"ax\":%d,\"ay\":%d,\"bx\":%d,\"by\":%d}", ctx.side, move_type, move.ax,
-           move.ay, move.bx, move.by);
-  mg_ws_send(c, buffer, strlen(buffer), WEBSOCKET_OP_TEXT);
+  cJSON *json = cJSON_CreateObject();
+
+  cJSON_AddStringToObject(json, "type", "move");
+  cJSON_AddNumberToObject(json, "side", ctx.side);
+  cJSON_AddNumberToObject(json, "move_type", move_type);
+  cJSON_AddNumberToObject(json, "ax", move.ax);
+  cJSON_AddNumberToObject(json, "ay", move.ay);
+  cJSON_AddNumberToObject(json, "bx", move.bx);
+  cJSON_AddNumberToObject(json, "by", move.by);
+
+  char *data = cJSON_PrintUnformatted(json);
+  mg_ws_send(c, data, strlen(data), WEBSOCKET_OP_TEXT);
+  cJSON_Delete(json);
 
   is_waiting_for_move = true;
   while (is_waiting_for_move) {
@@ -64,7 +78,10 @@ void send_move(struct Move move, enum MoveType move_type) {
 }
 
 void send_status(char *status) {
-  char buffer[64];
-  snprintf(buffer, sizeof(buffer), "{\"type\":\"%s\"}", status);
-  mg_ws_send(c, buffer, strlen(buffer), WEBSOCKET_OP_TEXT);
+  cJSON *json = cJSON_CreateObject();
+  cJSON_AddStringToObject(json, "type", status);
+
+  char *data = cJSON_PrintUnformatted(json);
+  mg_ws_send(c, data, strlen(data), WEBSOCKET_OP_TEXT);
+  cJSON_Delete(json);
 }

@@ -1,9 +1,22 @@
 #include <ncurses.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "../types.h"
 #include "check.h"
 #include "utility.h"
+
+void initalize_colors() {
+  if (has_colors() == FALSE) {
+    endwin();
+    printf("Your terminal does not support color\n");
+    exit(1);
+  }
+  start_color();
+  init_pair(0, COLOR_WHITE, COLOR_BLACK);
+  init_pair(1, COLOR_WHITE, COLOR_RED);
+  init_pair(2, COLOR_BLACK, COLOR_WHITE);
+}
 
 void initialize_context(struct Context *ctx) {
   memset(ctx, 0, sizeof(struct Context));
@@ -81,10 +94,10 @@ void undo_move(struct Context *ctx, struct Move move, enum MoveType move_type, s
   }
 }
 
-void save_played_move(struct Context *ctx, struct Move move, enum MoveType move_type, struct Piece piece, struct Piece victim) {
+void save_played_move(struct Context *ctx, enum Color side, struct Move move, enum MoveType move_type, struct Piece piece, struct Piece victim) {
   struct PlayedMove played_move;
-  enum Color opponent                          = ctx->turn == WHITE ? BLACK : WHITE;
-  played_move.side                             = ctx->turn;
+  enum Color opponent                          = side == WHITE ? BLACK : WHITE;
+  played_move.side                             = side;
   played_move.piece_type                       = piece.type;
   played_move.move_type                        = move_type;
   played_move.is_check                         = is_check(ctx, opponent);

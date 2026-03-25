@@ -85,13 +85,17 @@ void render_board(struct Context *ctx) {
       }
       // clang-format on
 
-      int x = cols / 2 - 8 + j * 2;
-      int y = rows / 2 - 4 + i;
+      int x        = cols / 2 - 8 + j * 2;
+      int y        = ctx->side == WHITE ? rows / 2 - 4 + i : rows / 2 + 3 - i;
+      int label_y  = ctx->side == WHITE ? 8 - i : i + 1;
+      char label_x = 'a' + j;
+
       attron(COLOR_PAIR(color));
       mvprintw(y, x, "%lc", ch);
       attroff(COLOR_PAIR(color));
-      i == 7 && mvprintw(y + 1, x, "%c", 'a' + j);
-      j == 0 && mvprintw(y, x - 1, "%d", 8 - i);
+
+      if ((ctx->side == WHITE && i == 7) || (ctx->side == BLACK && i == 0)) mvprintw(y + 1, x, "%c", label_x);
+      if (j == 0) mvprintw(y, x - 1, "%d", label_y);
     }
   }
 }
