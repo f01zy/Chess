@@ -51,10 +51,6 @@ void execute_move(struct Context *ctx, struct Move move, enum MoveType move_type
   struct Piece piece  = ctx->board[move.ay][move.ax];
   struct Piece victim = ctx->board[move.by][move.bx];
 
-  if (move_type == MOVE_CASTLING || piece.type == KING || piece.type == ROOK) {
-    ctx->turn == WHITE ? (ctx->can_white_castle = false) : (ctx->can_black_castle = false);
-  }
-
   if (move_type == MOVE_CASTLING) {
     int king_new_x                  = move.bx == 0 ? 2 : 6;
     int rook_new_x                  = move.bx == 0 ? 3 : 5;
@@ -71,9 +67,6 @@ void execute_move(struct Context *ctx, struct Move move, enum MoveType move_type
 
 void undo_move(struct Context *ctx, struct Move move, enum MoveType move_type, struct Piece piece, struct Piece victim) {
   enum Color opponent = ctx->turn == WHITE ? BLACK : WHITE;
-  if (move_type == MOVE_CASTLING || piece.type == KING || piece.type == ROOK) {
-    ctx->turn == WHITE ? (ctx->can_white_castle = true) : (ctx->can_black_castle = true);
-  }
 
   ctx->board[move.ay][move.ax] = piece;
   ctx->board[move.by][move.bx] = victim;
@@ -89,9 +82,9 @@ void undo_move(struct Context *ctx, struct Move move, enum MoveType move_type, s
 }
 
 void save_played_move(struct Context *ctx, struct Move move, enum MoveType move_type, struct Piece piece, struct Piece victim) {
-  enum Color opponent = ctx->turn == WHITE ? BLACK : WHITE;
   struct PlayedMove played_move;
-  played_move.turn                             = ctx->turn;
+  enum Color opponent                          = ctx->turn == WHITE ? BLACK : WHITE;
+  played_move.side                             = ctx->turn;
   played_move.piece_type                       = piece.type;
   played_move.move_type                        = move_type;
   played_move.is_check                         = is_check(ctx, opponent);
@@ -103,4 +96,23 @@ void save_played_move(struct Context *ctx, struct Move move, enum MoveType move_
   played_move.bx                               = move.bx;
   played_move.by                               = move.by;
   ctx->played_moves[ctx->played_moves_count++] = played_move;
+}
+
+bool get_coordinates(int *ax, int *ay, int *bx, int *by) {
+  int fromY, toY;
+  char fromX, toX;
+  char buffer[5];
+
+  echo();
+  int count = getnstr(buffer, sizeof(buffer));
+  noecho();
+  if (strcmp(buffer, "q") == 0) { return false; }
+  sscanf(buffer, "%c%d-%c%d", &fromX, &fromY, &toX, &toY);
+
+  *ax = fromX - 'a';
+  *ay = 8 - fromY;
+  *bx = toX - 'a';
+  *by = 8 - toY;
+
+  return true;
 }

@@ -1,6 +1,5 @@
 #include <mongoose.h>
 #include <ncurses.h>
-#include <string.h>
 #include <unistd.h>
 
 #include "../defines.h"
@@ -14,12 +13,12 @@
 #include "ui.h"
 
 void searching() {
-  connect_to_server();
+  send_status("searching");
   while (scene == Searching) {
+    mg_mgr_poll(&mgr, 100);
     clear();
     printw("Searching for opponent...");
     refresh();
-    mg_mgr_poll(&mgr, 100);
   }
 }
 
@@ -33,15 +32,10 @@ void lobby() {
 }
 
 void game() {
-  initialize_context(&ctx);
   while (scene == Game) {
-    mg_mgr_poll(&mgr, 100);
     clear();
-
     int rows, cols;
     getmaxyx(stdscr, rows, cols);
-    char fromX, toX;
-    int fromY, toY;
     int x = cols / 2 - 8;
     int y = rows / 2 + 6;
 
@@ -50,6 +44,15 @@ void game() {
       refresh();
       getch();
       continue;
+    }
+
+    if (ctx.turn != ctx.side) {
+      render(&ctx);
+      refresh();
+      while (ctx.turn != ctx.side) {
+        mg_mgr_poll(&mgr, 100);
+      }
+      clear();
     }
 
     render(&ctx);
@@ -63,21 +66,12 @@ void game() {
       break;
     }
 
-    char buffer[5];
-    echo();
-    int count = getnstr(buffer, sizeof(buffer));
-    noecho();
-    if (strcmp(buffer, "q") == 0) {
-      disconnect_from_server();
+    int ax, ay, bx, by;
+    if (!get_coordinates(&ax, &ay, &bx, &by)) {
+      send_status("disconnected");
       scene = Lobby;
       break;
     }
-    sscanf(buffer, "%c%d-%c%d", &fromX, &fromY, &toX, &toY);
-
-    int ax = fromX - 'a';
-    int ay = 8 - fromY;
-    int bx = toX - 'a';
-    int by = 8 - toY;
 
     struct Move move = {ax, ay, bx, by};
     if (!check_coordinates_validity(move)) {
@@ -113,8 +107,11 @@ void game() {
       continue;
     }
 
+    if (move_type == MOVE_CASTLING || piece.type == KING || piece.type == ROOK) {
+      ctx.turn == WHITE ? (ctx.can_white_castle = false) : (ctx.can_black_castle = false);
+    }
+
     save_played_move(&ctx, move, move_type, piece, victim);
-    change_turn(&ctx);
-    send_move(buffer);
+    send_move(move, move_type);
   }
 }

@@ -1,17 +1,57 @@
 import type { ServerWebSocket } from "bun";
 
+enum Color { WHITE, BLACK }
+
 type WebSocketData = {
-  username: string,
+  userId: number,
 }
 
 const lobby: ServerWebSocket<WebSocketData>[] = [];
 
+const random = (min: number, max: number) => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+const searching = (ws: ServerWebSocket<WebSocketData>) => {
+  if (lobby.length) {
+    const opponent = lobby.shift()!;
+    const gameId = random(0, 10000);
+
+    ws.subscribe(`game-${gameId}`);
+    opponent.subscribe(`game-${gameId}`);
+    ws.send(JSON.stringify({ type: "opponent_found", gameId, side: Color.WHITE }));
+    opponent.send(JSON.stringify({ type: "opponent_found", gameId, side: Color.BLACK }));
+    console.log(`The game ${gameId} was started`);
+  } else {
+    lobby.push(ws);
+    console.log(`${ws.data.userId} are searching for opponent`);
+  }
+}
+
+const disconnect = (ws: ServerWebSocket<WebSocketData>) => {
+  const game = ws.subscriptions[0];
+  if (!game) {
+    return;
+  }
+  server.publish(game, JSON.stringify({ type: "disconnected" }))
+  ws.unsubscribe(game);
+  console.log(`${ws.data.userId} was disconnected`);
+}
+
+const move = (ws: ServerWebSocket<WebSocketData>, data: string) => {
+  const game = ws.subscriptions[0];
+  if (!game) {
+    return;
+  }
+  server.publish(game, data)
+}
+
 const server = Bun.serve({
   async fetch(req, server) {
-    const username = await req.text() || "Anonymous";
+    const userId = random(0, 10000);
     server.upgrade(req, {
       data: {
-        username: username,
+        userId
       },
     });
     return undefined;
@@ -19,31 +59,30 @@ const server = Bun.serve({
   websocket: {
     data: {} as WebSocketData,
     async message(ws, message) {
+      let json;
 
+      try {
+        json = JSON.parse(message as string);
+      } catch { return };
+
+      switch (json.type) {
+        case "searching":
+          searching(ws);
+          break;
+        case "disconnected":
+          disconnect(ws);
+          break;
+        case "move":
+          move(ws, json.move);
+          break;
+      }
     },
     async open(ws) {
-      if (lobby.length) {
-        const opponent = lobby.shift()!;
-        const gameId = Math.floor(Math.random() * 10000);
-
-        ws.subscribe(`game-${gameId}`);
-        opponent.subscribe(`game-${gameId}`);
-        ws.send(JSON.stringify({ type: "opponent_found", gameId, color: "white" }));
-        opponent.send(JSON.stringify({ type: "opponent_found", gameId, color: "black" }));
-        console.log(`The game ${gameId} was started`);
-      } else {
-        lobby.push(ws);
-        console.log(`${ws.data.username} are searching for opponent`);
-      }
+      ws.send(JSON.stringify({ type: "connected" }));
+      console.log(`${ws.data.userId} was connected`);
     },
-    async close(ws, code, reason) {
-      const game = ws.subscriptions[0];
-      if (!game) {
-        return;
-      }
-      server.publish(game, JSON.stringify({ type: "disconnected" }))
-      ws.unsubscribe(game);
-      console.log(`${ws.data.username} was disconnected`);
+    async close(ws) {
+      disconnect(ws);
     }
   },
 });

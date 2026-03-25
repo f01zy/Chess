@@ -11,5 +11,6 @@ void get_king_position(struct Context *ctx, enum Color side, int *x, int *y);
 void save_played_move(struct Context *ctx, struct Move move, enum MoveType move_type, struct Piece piece, struct Piece victim);
 void undo_move(struct Context *ctx, struct Move move, enum MoveType move_type, struct Piece piece, struct Piece victim);
 void execute_move(struct Context *ctx, struct Move move, enum MoveType move_type);
+bool get_coordinates(int *ax, int *ay, int *bx, int *by);
 
 #endif

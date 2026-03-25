@@ -4,9 +4,10 @@
 
 #include "game/game.h"
 #include "globals.h"
+#include "network/socket.h"
 #include "types.h"
 
-void initialize_colors() {
+void initalize_colors() {
   if (has_colors() == FALSE) {
     endwin();
     printf("Your terminal does not support color\n");
@@ -24,9 +25,10 @@ int main() {
   noecho();
   cbreak();
   keypad(stdscr, TRUE);
-  initialize_colors();
+  initalize_colors();
+  initialize_mongoose();
 
-  while (1) {
+  while (scene != Exit) {
     // clang-format off
     switch (scene) {
       case Lobby:     lobby();
@@ -37,5 +39,6 @@ int main() {
     // clang-format on
   }
 
+  mg_mgr_free(&mgr);
   endwin();
 }

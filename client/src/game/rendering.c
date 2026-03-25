@@ -17,7 +17,7 @@ void render_played_moves(struct Context *ctx) {
     char ax   = 'a' + played_move.ax;
     char bx   = 'a' + played_move.bx;
     char by   = '0' + 8 - played_move.by;
-    int color = played_move.turn == WHITE ? BLACK_ON_WHITE : WHITE_ON_BLACK;
+    int color = played_move.side == WHITE ? BLACK_ON_WHITE : WHITE_ON_BLACK;
     int curr  = 0;
 
     // clang-format off
@@ -71,7 +71,7 @@ void render_board(struct Context *ctx) {
       wchar_t ch         = ' ';
 
       int color = WHITE_ON_BLACK;
-      if (piece.type == KING && piece.color == ctx->turn && is_now_check) { color = WHITE_ON_RED; }
+      if (piece.type == KING && piece.color == ctx->side && is_now_check) { color = WHITE_ON_RED; }
 
       // clang-format off
       switch (piece.type) {
