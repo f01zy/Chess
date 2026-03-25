@@ -40,9 +40,8 @@ void game() {
     int y = rows / 2 + 6;
 
     if (is_checkmate(&ctx, ctx.turn)) {
-      mvprintw(y++, x, "%s lose\n", ctx.turn == WHITE ? "White" : "Black");
-      refresh();
-      getch();
+      send_status("disconnect");
+      scene = Lobby;
       break;
     }
 
@@ -68,7 +67,7 @@ void game() {
 
     int ax, ay, bx, by;
     if (!get_coordinates(&ax, &ay, &bx, &by)) {
-      send_status("disconnected");
+      send_status("disconnect");
       scene = Lobby;
       break;
     }
@@ -98,9 +97,7 @@ void game() {
       continue;
     }
 
-    execute_move(&ctx, move, move_type);
-    if (is_check(&ctx, ctx.turn)) {
-      undo_move(&ctx, move, move_type, piece, victim);
+    if (is_protected(&ctx, move, move_type)) {
       mvprintw(y++, x, "So you are in check\n");
       refresh();
       getch();

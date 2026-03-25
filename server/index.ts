@@ -33,8 +33,8 @@ const disconnect = (ws: ServerWebSocket<WebSocketData>) => {
   if (!game) {
     return;
   }
-  server.publish(game, JSON.stringify({ type: "disconnected" }))
   ws.unsubscribe(game);
+  server.publish(game, JSON.stringify({ type: "disconnected" }));
   console.log(`${ws.data.userId} was disconnected`);
 }
 
@@ -69,7 +69,7 @@ const server = Bun.serve({
         case "searching":
           searching(ws);
           break;
-        case "disconnected":
+        case "disconnect":
           disconnect(ws);
           break;
         case "move":

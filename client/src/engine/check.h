@@ -6,6 +6,7 @@
 bool is_attacked(struct Context *ctx, enum Color side, int x, int y);
 bool is_check(struct Context *ctx, enum Color side);
 bool is_checkmate(struct Context *ctx, enum Color side);
+bool is_protected(struct Context *ctx, struct Move move, enum MoveType move_type);
 
 bool check_coordinates_validity(struct Move move);
 enum MoveType check_castling(struct Context *ctx, enum Color side, struct Move move);

@@ -22,7 +22,6 @@ static void handler(struct mg_connection *c, int ev, void *ev_data) {
       scene    = Game;
     }
     if (!strcmp(type, "move")) {
-      // TODO: у отправителя фигура в пизду улетает
       enum Color side         = cJSON_GetObjectItem(json, "side")->valueint;
       enum MoveType move_type = cJSON_GetObjectItem(json, "move_type")->valueint;
       int ax                  = cJSON_GetObjectItem(json, "ax")->valueint;
@@ -32,13 +31,17 @@ static void handler(struct mg_connection *c, int ev, void *ev_data) {
       struct Move move        = {ax, ay, bx, by};
       struct Piece piece      = ctx.board[ay][ax];
       struct Piece victim     = ctx.board[by][bx];
+
       execute_move(&ctx, move, move_type);
       save_played_move(&ctx, side, move, move_type, piece, victim);
       change_turn(&ctx);
       is_waiting_for_move = false;
     }
     if (!strcmp(type, "connected")) { is_connected = true; }
-    if (!strcmp(type, "disconnected")) { scene = Lobby; }
+    if (!strcmp(type, "disconnected")) {
+      send_status("disconnect");
+      scene = Lobby;
+    }
 
     cJSON_Delete(json);
   }

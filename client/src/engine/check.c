@@ -52,6 +52,17 @@ bool is_checkmate(struct Context *ctx, enum Color side) {
   return true;
 }
 
+bool is_protected(struct Context *ctx, struct Move move, enum MoveType move_type) {
+  struct Piece piece  = ctx->board[move.ay][move.ax];
+  struct Piece victim = ctx->board[move.by][move.bx];
+
+  bool result = false;
+  execute_move(ctx, move, move_type);
+  if (is_check(ctx, ctx->turn)) { result = true; }
+  undo_move(ctx, move, move_type, piece, victim);
+  return result;
+}
+
 bool check_coordinates_validity(struct Move move) {
   if ((move.ay < 0 || move.ay > 7) || (move.by < 0 || move.by > 7) || (move.ax < 0 || move.ax > 7) || (move.bx < 0 || move.bx > 7)) return false;
   if (move.ax == move.bx && move.ay == move.by) return false;
