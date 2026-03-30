@@ -1,7 +1,10 @@
 #include "ui.h"
+
 #include <ncurses.h>
 #include <string.h>
+#include <unistd.h>
 
+// TODO: решить проблему с мерцанием
 int menu(char *options[MAX_MENU_OPTIONS], int size) {
   int option = 0, c = 0;
   do {
@@ -27,6 +30,7 @@ int menu(char *options[MAX_MENU_OPTIONS], int size) {
       attroff(COLOR_PAIR(color));
     }
     refresh();
+    usleep(10000);
   } while ((c = getch()) != ENTER);
 
   return option;

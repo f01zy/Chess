@@ -1,6 +1,7 @@
 #ifndef DEFINES_H_INCLUDED
 #define DEFINES_H_INCLUDED
 
+// #define SERVER_IP        "193.58.121.55"
 #define SERVER_IP        "localhost"
 #define SERVER_PORT      "3000"
 #define SERVER_URL       "ws://" SERVER_IP ":" SERVER_PORT
@@ -12,6 +13,7 @@
 #define MIN_HEIGHT       20
 #define ESCAPE           27
 #define ENTER            10
+#define BACKSPACE        127
 
 #define WHITE_ON_BLACK   0
 #define WHITE_ON_RED     1

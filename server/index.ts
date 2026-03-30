@@ -47,20 +47,17 @@ const move = (ws: ServerWebSocket<WebSocketData>, data: string) => {
   server.publish(gameId, data);
 }
 
-const disconnect = (ws: ServerWebSocket<WebSocketData>) => {
-  if (!ws.subscriptions.length) {
+const disconnect_from_room = (ws: ServerWebSocket<WebSocketData>) => {
+  const game = games.find(game => game.users.find(user => user.data.userId == ws.data.userId));
+  if (!game) {
     return;
   }
-  const gameId = ws.subscriptions[0]!;
-  const numberGameId = Number(gameId);
-  const game = games.find(game => game.gameId == numberGameId)!;
-
   game.users.forEach(user => {
     user.send(JSON.stringify({ type: "disconnected" }));
-    user.unsubscribe(gameId);
+    user.unsubscribe(String(game.gameId));
   });
-  games = games.filter(game => game.gameId != numberGameId);
-  console.log(`The game ${gameId} was finished`);
+  games = games.filter(temp => temp.gameId != game.gameId);
+  console.log(`The game ${game.gameId} was finished`);
 }
 
 const server = Bun.serve({
@@ -86,8 +83,8 @@ const server = Bun.serve({
         case "searching":
           opponent_searching(ws);
           break;
-        case "disconnect":
-          disconnect(ws);
+        case "disconnect_from_room":
+          disconnect_from_room(ws);
           break;
         case "move":
           move(ws, message);
@@ -99,7 +96,9 @@ const server = Bun.serve({
       console.log(`${ws.data.userId} was connected`);
     },
     async close(ws) {
-      disconnect(ws);
+      disconnect_from_room(ws);
+      lobby = lobby.filter(user => user.data.userId != ws.data.userId);
+      console.log(`${ws.data.userId} was disconnected`);
     }
   },
 });

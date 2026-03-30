@@ -8,6 +8,6 @@
 
 void initialize_mongoose();
 void send_move(struct Move move, enum MoveType move_type);
-void send_status(char *status, uint64_t mask);
+void send_status(char *status, char *waiting_message, uint64_t waiting_mask);
 
 #endif

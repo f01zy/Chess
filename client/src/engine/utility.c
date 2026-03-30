@@ -1,9 +1,12 @@
+#include <ctype.h>
 #include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "../globals.h"
 #include "../types.h"
 #include "check.h"
+#include "mongoose.h"
 #include "utility.h"
 
 void initalize_colors() {
@@ -111,16 +114,33 @@ void save_played_move(struct Context *ctx, enum Color side, struct Move move, en
   ctx->played_moves[ctx->played_moves_count++] = played_move;
 }
 
+// TODO: допилить неблокирующий ввод (убрать echo и самому отрисовывать буфер)
 bool get_coordinates(int *ax, int *ay, int *bx, int *by) {
   int fromY, toY;
   char fromX, toX;
-  char buffer[5];
+  char buffer[6];
+  int curr = 0;
 
   echo();
-  int count = getnstr(buffer, sizeof(buffer));
+  while (1) {
+    mg_mgr_poll(&mgr, 0);
+    int ch = getch();
+    if (ch != ERR) {
+      if (ch == ENTER) {
+        if (sscanf(buffer, "%c%d-%c%d", &fromX, &fromY, &toX, &toY) == 4) break;
+        memset(buffer, 0, sizeof(buffer));
+        curr = 0;
+      } else if (ch == BACKSPACE && curr > 0) {
+        buffer[--curr] = '\0';
+      } else if (isprint(ch) && curr < sizeof(buffer) - 1) {
+        buffer[curr++] = ch;
+        buffer[curr]   = '\0';
+      }
+    }
+    usleep(10000);
+  }
   noecho();
-  if (strcmp(buffer, "q") == 0) { return false; }
-  sscanf(buffer, "%c%d-%c%d", &fromX, &fromY, &toX, &toY);
+  if (strcmp(buffer, "q") == 0) return false;
 
   *ax = fromX - 'a';
   *ay = 8 - fromY;

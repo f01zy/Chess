@@ -13,7 +13,7 @@
 #include "ui.h"
 
 void searching() {
-  send_status("searching", WAIT_SEARCHING);
+  send_status("searching", "Searching for an opponent...", WAIT_SEARCHING);
   scene = Game;
 }
 
@@ -53,7 +53,7 @@ void game() {
 
     enum Color opponent = ctx.side == WHITE ? BLACK : WHITE;
     if (is_checkmate(&ctx, ctx.side) || is_checkmate(&ctx, opponent)) {
-      send_status("disconnect", WAIT_DISCONNECT);
+      send_status("disconnect_from_room", "Disconnecting...", WAIT_DISCONNECT);
       break;
     }
 
@@ -63,7 +63,7 @@ void game() {
 
     int ax, ay, bx, by;
     if (!get_coordinates(&ax, &ay, &bx, &by)) {
-      send_status("disconnect", WAIT_DISCONNECT);
+      send_status("disconnect_from_room", "Disconnecting...", WAIT_DISCONNECT);
       break;
     }
 

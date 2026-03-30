@@ -81,19 +81,26 @@ void send_move(struct Move move, enum MoveType move_type) {
   }
 }
 
-void send_status(char *status, uint64_t mask) {
+void send_status(char *status, char *waiting_message, uint64_t waiting_mask) {
   cJSON *json = cJSON_CreateObject();
   cJSON_AddStringToObject(json, "type", status);
 
   char *data = cJSON_PrintUnformatted(json);
   mg_ws_send(c, data, strlen(data), WEBSOCKET_OP_TEXT);
   cJSON_Delete(json);
+  pending |= waiting_mask;
 
-  pending |= mask;
-  while (pending &= mask) {
+  int rows, cols;
+  getmaxyx(stdscr, rows, cols);
+  int x = cols / 2 - strlen(waiting_message) / 2;
+  int y = rows / 2;
+
+  attron(COLOR_PAIR(BLACK_ON_WHITE));
+  while (pending &= waiting_mask) {
     mg_mgr_poll(&mgr, 100);
     clear();
-    printw("Pending...");
+    mvprintw(y, x, "%s\n", waiting_message);
     refresh();
   }
+  attroff(COLOR_PAIR(BLACK_ON_WHITE));
 }
