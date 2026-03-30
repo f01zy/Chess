@@ -8,6 +8,7 @@
 #include "socket.h"
 
 bool is_connected = false;
+uint64_t pending  = 0;
 
 static void handler(struct mg_connection *c, int ev, void *ev_data) {
   if (ev == MG_EV_WS_MSG) {
@@ -18,9 +19,11 @@ static void handler(struct mg_connection *c, int ev, void *ev_data) {
     if (!strcmp(type, "opponent_found")) {
       enum Color side = cJSON_GetObjectItem(json, "side")->valueint;
       initialize_context(&ctx);
-      ctx.side = side;
-      scene    = Game;
+      ctx.side  = side;
+      scene     = Game;
+      pending  &= ~WAIT_SEARCHING;
     }
+
     if (!strcmp(type, "move")) {
       enum Color side         = cJSON_GetObjectItem(json, "side")->valueint;
       enum MoveType move_type = cJSON_GetObjectItem(json, "move_type")->valueint;
@@ -35,12 +38,13 @@ static void handler(struct mg_connection *c, int ev, void *ev_data) {
       execute_move(&ctx, move, move_type);
       save_played_move(&ctx, side, move, move_type, piece, victim);
       change_turn(&ctx);
-      is_waiting_for_move = false;
+      pending &= ~WAIT_MOVE;
     }
+
     if (!strcmp(type, "connected")) { is_connected = true; }
     if (!strcmp(type, "disconnected")) {
-      send_status("disconnect");
-      scene = Lobby;
+      scene    = Lobby;
+      pending &= ~WAIT_DISCONNECT;
     }
 
     cJSON_Delete(json);
@@ -53,9 +57,6 @@ void initialize_mongoose() {
   c = mg_ws_connect(&mgr, SERVER_URL, handler, NULL, NULL);
   while (!is_connected) {
     mg_mgr_poll(&mgr, 100);
-    clear();
-    printw("Connecting...");
-    refresh();
   }
 }
 
@@ -74,17 +75,25 @@ void send_move(struct Move move, enum MoveType move_type) {
   mg_ws_send(c, data, strlen(data), WEBSOCKET_OP_TEXT);
   cJSON_Delete(json);
 
-  is_waiting_for_move = true;
-  while (is_waiting_for_move) {
+  pending |= WAIT_MOVE;
+  while (pending &= WAIT_MOVE) {
     mg_mgr_poll(&mgr, 100);
   }
 }
 
-void send_status(char *status) {
+void send_status(char *status, uint64_t mask) {
   cJSON *json = cJSON_CreateObject();
   cJSON_AddStringToObject(json, "type", status);
 
   char *data = cJSON_PrintUnformatted(json);
   mg_ws_send(c, data, strlen(data), WEBSOCKET_OP_TEXT);
   cJSON_Delete(json);
+
+  pending |= mask;
+  while (pending &= mask) {
+    mg_mgr_poll(&mgr, 100);
+    clear();
+    printw("Pending...");
+    refresh();
+  }
 }

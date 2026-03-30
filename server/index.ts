@@ -6,19 +6,30 @@ type WebSocketData = {
   userId: number,
 }
 
-const lobby: ServerWebSocket<WebSocketData>[] = [];
+type Game = {
+  gameId: number,
+  users: ServerWebSocket<WebSocketData>[],
+}
+
+let lobby: ServerWebSocket<WebSocketData>[] = [];
+let games: Game[] = [];
 
 const random = (min: number, max: number) => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-const searching = (ws: ServerWebSocket<WebSocketData>) => {
+const opponent_searching = (ws: ServerWebSocket<WebSocketData>) => {
   if (lobby.length) {
     const opponent = lobby.shift()!;
     const gameId = random(0, 10000);
 
-    ws.subscribe(`game-${gameId}`);
-    opponent.subscribe(`game-${gameId}`);
+    games.push({
+      gameId,
+      users: [ws, opponent],
+    });
+    ws.subscribe(`${gameId}`);
+    opponent.subscribe(`${gameId}`);
+
     ws.send(JSON.stringify({ type: "opponent_found", gameId, side: Color.WHITE }));
     opponent.send(JSON.stringify({ type: "opponent_found", gameId, side: Color.BLACK }));
     console.log(`The game ${gameId} was started`);
@@ -28,22 +39,28 @@ const searching = (ws: ServerWebSocket<WebSocketData>) => {
   }
 }
 
-const disconnect = (ws: ServerWebSocket<WebSocketData>) => {
-  const game = ws.subscriptions[0];
-  if (!game) {
+const move = (ws: ServerWebSocket<WebSocketData>, data: string) => {
+  if (!ws.subscriptions.length) {
     return;
   }
-  ws.unsubscribe(game);
-  server.publish(game, JSON.stringify({ type: "disconnected" }));
-  console.log(`${ws.data.userId} was disconnected`);
+  const gameId = ws.subscriptions[0]!;
+  server.publish(gameId, data);
 }
 
-const move = (ws: ServerWebSocket<WebSocketData>, data: string) => {
-  const game = ws.subscriptions[0];
-  if (!game) {
+const disconnect = (ws: ServerWebSocket<WebSocketData>) => {
+  if (!ws.subscriptions.length) {
     return;
   }
-  server.publish(game, data)
+  const gameId = ws.subscriptions[0]!;
+  const numberGameId = Number(gameId);
+  const game = games.find(game => game.gameId == numberGameId)!;
+
+  game.users.forEach(user => {
+    user.send(JSON.stringify({ type: "disconnected" }));
+    user.unsubscribe(gameId);
+  });
+  games = games.filter(game => game.gameId != numberGameId);
+  console.log(`The game ${gameId} was finished`);
 }
 
 const server = Bun.serve({
@@ -67,7 +84,7 @@ const server = Bun.serve({
 
       switch (json.type) {
         case "searching":
-          searching(ws);
+          opponent_searching(ws);
           break;
         case "disconnect":
           disconnect(ws);

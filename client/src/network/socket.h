@@ -2,10 +2,12 @@
 #define SOCKET_H_INCLUDED
 
 #include "../types.h"
+
 #include <mongoose.h>
+#include <stdint.h>
 
 void initialize_mongoose();
 void send_move(struct Move move, enum MoveType move_type);
-void send_status(char *status);
+void send_status(char *status, uint64_t mask);
 
 #endif

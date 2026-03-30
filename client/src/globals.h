@@ -4,7 +4,6 @@
 #include "types.h"
 #include <mongoose.h>
 
-extern bool is_waiting_for_move;
 extern enum Scene scene;
 extern struct Context ctx;
 extern struct mg_mgr mgr;

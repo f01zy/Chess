@@ -13,13 +13,8 @@
 #include "ui.h"
 
 void searching() {
-  send_status("searching");
-  while (scene == Searching) {
-    mg_mgr_poll(&mgr, 100);
-    clear();
-    printw("Searching for opponent...");
-    refresh();
-  }
+  send_status("searching", WAIT_SEARCHING);
+  scene = Game;
 }
 
 void lobby() {
@@ -40,8 +35,7 @@ void game() {
     int y = rows / 2 + 6;
 
     if (is_checkmate(&ctx, ctx.turn)) {
-      send_status("disconnect");
-      scene = Lobby;
+      send_status("disconnect", WAIT_DISCONNECT);
       break;
     }
 
@@ -55,10 +49,11 @@ void game() {
     if (ctx.turn != ctx.side) {
       render(&ctx);
       refresh();
-      while (ctx.turn != ctx.side) {
+      while (scene == Game && ctx.turn != ctx.side) {
         mg_mgr_poll(&mgr, 100);
       }
       clear();
+      if (scene != Game) { break; }
     }
 
     render(&ctx);
@@ -67,8 +62,7 @@ void game() {
 
     int ax, ay, bx, by;
     if (!get_coordinates(&ax, &ay, &bx, &by)) {
-      send_status("disconnect");
-      scene = Lobby;
+      send_status("disconnect", WAIT_DISCONNECT);
       break;
     }
 

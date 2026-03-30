@@ -30,6 +30,11 @@
 #define BLACK_BISHOP     L'\u265D'
 #define BLACK_KNIGHT     L'\u265E'
 
+#define WAIT_CONNECT     (1 << 0)
+#define WAIT_DISCONNECT  (1 << 1)
+#define WAIT_MOVE        (1 << 2)
+#define WAIT_SEARCHING   (1 << 3)
+
 #define MAX(A, B)        ((A) > (B) ? (A) : (B))
 #define MIN(A, B)        ((A) < (B) ? (A) : (B))
 #define CLAMP(A, B, C)   ((A) < (B) ? (B) : (A) > (C) ? (C) : (A))
