@@ -34,11 +34,6 @@ void game() {
     int x = cols / 2 - 8;
     int y = rows / 2 + 6;
 
-    if (is_checkmate(&ctx, ctx.turn)) {
-      send_status("disconnect", WAIT_DISCONNECT);
-      break;
-    }
-
     if (cols < MIN_WIDTH || rows < MIN_HEIGHT) {
       printw("Your terminal too little. Minimum size is %dx%d\n", MIN_WIDTH, MIN_HEIGHT);
       refresh();
@@ -53,7 +48,13 @@ void game() {
         mg_mgr_poll(&mgr, 100);
       }
       clear();
-      if (scene != Game) { break; }
+      if (scene != Game) break;
+    }
+
+    enum Color opponent = ctx.side == WHITE ? BLACK : WHITE;
+    if (is_checkmate(&ctx, ctx.side) || is_checkmate(&ctx, opponent)) {
+      send_status("disconnect", WAIT_DISCONNECT);
+      break;
     }
 
     render(&ctx);

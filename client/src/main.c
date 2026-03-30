@@ -19,10 +19,10 @@ int main() {
   while (scene != Exit) {
     // clang-format off
     switch (scene) {
-      case Lobby:     lobby();
-      case Searching: searching();
-      case Game:      game();
-      case Exit:      break;
+      case Lobby:     lobby();     break;
+      case Searching: searching(); break;
+      case Game:      game();      break;
+      case Exit:                   break;
     }
     // clang-format on
   }
