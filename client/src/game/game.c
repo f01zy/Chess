@@ -12,27 +12,24 @@
 #include "rendering.h"
 #include "ui.h"
 
-void searching() {
-  send_status("searching", "Searching for an opponent...", WAIT_SEARCHING);
-  scene = Game;
-}
+void searching() { send_status("searching", "Searching for an opponent...", WAIT_SEARCHING); }
 
 void lobby() {
   char *options[MAX_MENU_OPTIONS] = {"Start", "Exit"};
-  while (scene == Lobby) {
+  while (scene == LOBBY) {
     int option = menu(options, 2);
-    if (option == 0) scene = Searching;
-    if (option == 1) scene = Exit;
+    if (option == 0) scene = SEARCHING;
+    if (option == 1) scene = EXIT;
   }
 }
 
 void game() {
-  while (scene == Game) {
+  while (scene == GAME) {
     clear();
     int rows, cols;
     getmaxyx(stdscr, rows, cols);
     int x = cols / 2 - 8;
-    int y = rows / 2 + 6;
+    int y = rows / 2 + 7;
 
     if (cols < MIN_WIDTH || rows < MIN_HEIGHT) {
       printw("Your terminal too little. Minimum size is %dx%d\n", MIN_WIDTH, MIN_HEIGHT);
@@ -44,23 +41,19 @@ void game() {
     if (ctx.turn != ctx.side) {
       render(&ctx);
       refresh();
-      while (scene == Game && ctx.turn != ctx.side) {
+      while (scene == GAME && ctx.turn != ctx.side) {
         mg_mgr_poll(&mgr, 100);
       }
       clear();
-      if (scene != Game) break;
     }
+    if (scene != GAME) break;
 
-    enum Color opponent = ctx.side == WHITE ? BLACK : WHITE;
-    if (is_checkmate(&ctx, ctx.side) || is_checkmate(&ctx, opponent)) {
+    if (is_checkmate(&ctx, ctx.side)) {
       send_status("disconnect_from_room", "Disconnecting...", WAIT_DISCONNECT);
       break;
     }
 
     render(&ctx);
-    mvprintw(y++, x, "Coordinates: ");
-    refresh();
-
     int ax, ay, bx, by;
     if (!get_coordinates(&ax, &ay, &bx, &by)) {
       send_status("disconnect_from_room", "Disconnecting...", WAIT_DISCONNECT);
@@ -69,7 +62,7 @@ void game() {
 
     struct Move move = {ax, ay, bx, by};
     if (!check_coordinates_validity(move)) {
-      mvprintw(y++, x, "The coordinates is invalid\n");
+      mvprintw(y, x, "The coordinates is invalid\n");
       refresh();
       getch();
       continue;
@@ -86,14 +79,14 @@ void game() {
     }
 
     if (move_type == MOVE_INVALID) {
-      mvprintw(y++, x, "The move is invalid\n");
+      mvprintw(y, x, "The move is invalid\n");
       refresh();
       getch();
       continue;
     }
 
     if (is_protected(&ctx, move, move_type)) {
-      mvprintw(y++, x, "So you are in check\n");
+      mvprintw(y, x, "So you are in check\n");
       refresh();
       getch();
       continue;

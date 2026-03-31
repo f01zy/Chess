@@ -19,7 +19,7 @@ static void handler(struct mg_connection *c, int ev, void *ev_data) {
       enum Color side = cJSON_GetObjectItem(json, "side")->valueint;
       initialize_context(&ctx);
       ctx.side  = side;
-      scene     = Game;
+      scene     = GAME;
       pending  &= ~WAIT_SEARCHING;
     }
 
@@ -45,7 +45,7 @@ static void handler(struct mg_connection *c, int ev, void *ev_data) {
     }
 
     else if (!strcmp(type, "disconnected")) {
-      scene    = Lobby;
+      scene    = LOBBY;
       pending &= ~WAIT_DISCONNECT;
     }
 

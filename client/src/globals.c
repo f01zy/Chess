@@ -1,7 +1,6 @@
 #include "globals.h"
-#include "types.h"
 
-enum Scene scene        = Lobby;
+enum Scene scene        = LOBBY;
 struct Context ctx      = {};
 struct mg_mgr mgr       = {};
 struct mg_connection *c = NULL;

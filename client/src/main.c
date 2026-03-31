@@ -17,13 +17,13 @@ int main() {
   initalize_colors();
   initialize_mongoose();
 
-  while (scene != Exit) {
+  while (scene != EXIT) {
     // clang-format off
     switch (scene) {
-      case Lobby:     lobby();     break;
-      case Searching: searching(); break;
-      case Game:      game();      break;
-      case Exit:                   break;
+      case LOBBY:     lobby();     break;
+      case SEARCHING: searching(); break;
+      case GAME:      game();      break;
+      case EXIT:                   break;
     }
     // clang-format on
   }

@@ -50,6 +50,7 @@ const move = (ws: ServerWebSocket<WebSocketData>, data: string) => {
 const disconnect_from_room = (ws: ServerWebSocket<WebSocketData>) => {
   const game = games.find(game => game.users.find(user => user.data.userId == ws.data.userId));
   if (!game) {
+    ws.send(JSON.stringify({ type: "disconnected" }));
     return;
   }
   game.users.forEach(user => {

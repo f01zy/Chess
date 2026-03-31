@@ -13,7 +13,6 @@
 #define MIN_HEIGHT       20
 #define ESCAPE           27
 #define ENTER            10
-#define BACKSPACE        127
 
 #define WHITE_ON_BLACK   0
 #define WHITE_ON_RED     1
