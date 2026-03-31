@@ -7,8 +7,7 @@
 #include "../globals.h"
 #include "socket.h"
 
-bool is_connected = false;
-uint64_t pending  = 0;
+uint64_t pending = 0;
 
 static void handler(struct mg_connection *c, int ev, void *ev_data) {
   if (ev == MG_EV_WS_MSG) {
@@ -24,7 +23,7 @@ static void handler(struct mg_connection *c, int ev, void *ev_data) {
       pending  &= ~WAIT_SEARCHING;
     }
 
-    if (!strcmp(type, "move")) {
+    else if (!strcmp(type, "move")) {
       enum Color side         = cJSON_GetObjectItem(json, "side")->valueint;
       enum MoveType move_type = cJSON_GetObjectItem(json, "move_type")->valueint;
       int ax                  = cJSON_GetObjectItem(json, "ax")->valueint;
@@ -41,8 +40,11 @@ static void handler(struct mg_connection *c, int ev, void *ev_data) {
       pending &= ~WAIT_MOVE;
     }
 
-    if (!strcmp(type, "connected")) { is_connected = true; }
-    if (!strcmp(type, "disconnected")) {
+    else if (!strcmp(type, "connected")) {
+      pending &= ~WAIT_CONNECT;
+    }
+
+    else if (!strcmp(type, "disconnected")) {
       scene    = Lobby;
       pending &= ~WAIT_DISCONNECT;
     }
@@ -54,10 +56,9 @@ static void handler(struct mg_connection *c, int ev, void *ev_data) {
 void initialize_mongoose() {
   mg_log_set(MG_LL_NONE);
   mg_mgr_init(&mgr);
-  c = mg_ws_connect(&mgr, SERVER_URL, handler, NULL, NULL);
-  while (!is_connected) {
-    mg_mgr_poll(&mgr, 100);
-  }
+  c        = mg_ws_connect(&mgr, SERVER_URL, handler, NULL, NULL);
+  pending |= WAIT_CONNECT;
+  waiting_message("Connecting...", WAIT_CONNECT);
 }
 
 void send_move(struct Move move, enum MoveType move_type) {
@@ -74,32 +75,32 @@ void send_move(struct Move move, enum MoveType move_type) {
   char *data = cJSON_PrintUnformatted(json);
   mg_ws_send(c, data, strlen(data), WEBSOCKET_OP_TEXT);
   cJSON_Delete(json);
-
   pending |= WAIT_MOVE;
-  while (pending &= WAIT_MOVE) {
-    mg_mgr_poll(&mgr, 100);
-  }
+  waiting_message("Pending move...", WAIT_MOVE);
 }
 
-void send_status(char *status, char *waiting_message, uint64_t waiting_mask) {
+void send_status(char *status, char *message, int mask) {
   cJSON *json = cJSON_CreateObject();
   cJSON_AddStringToObject(json, "type", status);
 
   char *data = cJSON_PrintUnformatted(json);
   mg_ws_send(c, data, strlen(data), WEBSOCKET_OP_TEXT);
   cJSON_Delete(json);
-  pending |= waiting_mask;
+  pending |= mask;
+  waiting_message(message, mask);
+}
 
+void waiting_message(char *message, int mask) {
   int rows, cols;
   getmaxyx(stdscr, rows, cols);
-  int x = cols / 2 - strlen(waiting_message) / 2;
+  int x = cols / 2 - strlen(message) / 2;
   int y = rows / 2;
 
   attron(COLOR_PAIR(BLACK_ON_WHITE));
-  while (pending &= waiting_mask) {
+  while (pending & mask) {
     mg_mgr_poll(&mgr, 100);
     clear();
-    mvprintw(y, x, "%s\n", waiting_message);
+    mvprintw(y, x, "%s\n", message);
     refresh();
   }
   attroff(COLOR_PAIR(BLACK_ON_WHITE));
