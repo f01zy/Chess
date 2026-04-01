@@ -114,14 +114,14 @@ void save_played_move(struct Context *ctx, enum Color side, struct Move move, en
   ctx->played_moves[ctx->played_moves_count++] = played_move;
 }
 
-// TODO: перенести сюда все проверки из игрового цикла, связанные с ходом
 bool get_move(struct Move *move) {
   int fromY, toY;
   char fromX, toX;
-  char buffer[6] = "";
-  char *error    = "";
-  int curr       = 0;
-
+  char buffer[6]          = "";
+  char *error             = "";
+  int curr                = 0;
+  bool is_first_rendering = true;
+  nodelay(stdscr, TRUE);
   int rows, cols;
   getmaxyx(stdscr, rows, cols);
   int x = cols / 2 - 8;
@@ -129,35 +129,41 @@ bool get_move(struct Move *move) {
 
   while (1) {
     mg_mgr_poll(&mgr, 0);
-    if (scene != GAME) return false;
+    if (scene != GAME) {
+      nodelay(stdscr, FALSE);
+      return false;
+    }
 
     int ch = getch();
-    if (ch == ERR) continue;
-    else if (ch == ENTER) {
-      if (!strcmp(buffer, "q")) return false;
-      if (sscanf(buffer, "%c%d-%c%d", &fromX, &fromY, &toX, &toY) == 4) {
-        struct Move temp = {fromX - 'a', 8 - fromY, toX - 'a', 8 - toY};
-        if (check_coordinates_validity(temp)) {
-          *move = temp;
-          break;
-        } else {
-          error = "The coordinates is invalid";
-        }
-      } else {
+    if (ch == ERR && !is_first_rendering) continue;
+    if (ch == KEY_BACKSPACE && curr > 0) buffer[--curr] = '\0';
+    is_first_rendering = false;
+
+    if (ch == ENTER) {
+      struct Move temp = {fromX - 'a', 8 - fromY, toX - 'a', 8 - toY};
+      if (sscanf(buffer, "%c%d-%c%d", &fromX, &fromY, &toX, &toY) != 4 || !check_coordinates_validity(temp)) {
         error = "Format must be x1y1-x2y2";
+      } else {
+        nodelay(stdscr, FALSE);
+        *move = temp;
+        break;
       }
       memset(buffer, 0, sizeof(buffer));
       curr = 0;
-    } else if (ch == KEY_BACKSPACE && curr > 0) {
-      buffer[--curr] = '\0';
-    } else if (isprint(ch) && curr < sizeof(buffer) - 1) {
+    }
+
+    if (isprint(ch) && curr < sizeof(buffer) - 1) {
       buffer[curr++] = ch;
       buffer[curr]   = '\0';
     }
 
-    mvprintw(y + 1, x, "%s\n", error);
     move(y, x);
-    printw("Coordinates: %s", buffer);
+    if (strlen(error)) {
+      printw("%s\n", error);
+      error = "";
+    } else {
+      printw("Coordinates: %s", buffer);
+    }
     clrtoeol();
     refresh();
     usleep(10000);

@@ -50,9 +50,9 @@ void game() {
         mg_mgr_poll(&mgr, 100);
       }
       clear();
-      if (scene != GAME) break;
     }
 
+    if (scene != GAME) break;
     render(&ctx);
     struct Move move;
     if (!get_move(&move)) {

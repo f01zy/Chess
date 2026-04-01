@@ -13,7 +13,6 @@ int main() {
   noecho();
   cbreak();
   keypad(stdscr, TRUE);
-  nodelay(stdscr, TRUE);
   initalize_colors();
   initialize_mongoose();
 
