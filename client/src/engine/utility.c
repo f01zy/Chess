@@ -114,12 +114,13 @@ void save_played_move(struct Context *ctx, enum Color side, struct Move move, en
   ctx->played_moves[ctx->played_moves_count++] = played_move;
 }
 
-bool get_coordinates(int *ax, int *ay, int *bx, int *by) {
+// TODO: перенести сюда все проверки из игрового цикла, связанные с ходом
+bool get_move(struct Move *move) {
   int fromY, toY;
   char fromX, toX;
-  char buffer[6]  = "\0";
-  int curr        = 0;
-  bool is_changed = true;
+  char buffer[6] = "";
+  char *error    = "";
+  int curr       = 0;
 
   int rows, cols;
   getmaxyx(stdscr, rows, cols);
@@ -128,36 +129,39 @@ bool get_coordinates(int *ax, int *ay, int *bx, int *by) {
 
   while (1) {
     mg_mgr_poll(&mgr, 0);
-    int ch = getch();
     if (scene != GAME) return false;
-    if (ch != ERR) {
-      is_changed = true;
-      if (ch == ENTER) {
-        if (!strcmp(buffer, "q")) return false;
-        if (sscanf(buffer, "%c%d-%c%d", &fromX, &fromY, &toX, &toY) == 4) break;
-        memset(buffer, 0, sizeof(buffer));
-        curr = 0;
-      } else if (ch == KEY_BACKSPACE && curr > 0) {
-        buffer[--curr] = '\0';
-      } else if (isprint(ch) && curr < sizeof(buffer) - 1) {
-        buffer[curr++] = ch;
-        buffer[curr]   = '\0';
+
+    int ch = getch();
+    if (ch == ERR) continue;
+    else if (ch == ENTER) {
+      if (!strcmp(buffer, "q")) return false;
+      if (sscanf(buffer, "%c%d-%c%d", &fromX, &fromY, &toX, &toY) == 4) {
+        struct Move temp = {fromX - 'a', 8 - fromY, toX - 'a', 8 - toY};
+        if (check_coordinates_validity(temp)) {
+          *move = temp;
+          break;
+        } else {
+          error = "The coordinates is invalid";
+        }
+      } else {
+        error = "Format must be x1y1-x2y2";
       }
+      memset(buffer, 0, sizeof(buffer));
+      curr = 0;
+    } else if (ch == KEY_BACKSPACE && curr > 0) {
+      buffer[--curr] = '\0';
+    } else if (isprint(ch) && curr < sizeof(buffer) - 1) {
+      buffer[curr++] = ch;
+      buffer[curr]   = '\0';
     }
-    if (is_changed) {
-      is_changed = false;
-      move(y, x);
-      printw("Coordinates: %s", buffer);
-      clrtoeol();
-      refresh();
-    }
+
+    mvprintw(y + 1, x, "%s\n", error);
+    move(y, x);
+    printw("Coordinates: %s", buffer);
+    clrtoeol();
+    refresh();
     usleep(10000);
   }
-
-  *ax = fromX - 'a';
-  *ay = 8 - fromY;
-  *bx = toX - 'a';
-  *by = 8 - toY;
 
   return true;
 }

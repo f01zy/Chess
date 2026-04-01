@@ -25,6 +25,11 @@ void lobby() {
 
 void game() {
   while (scene == GAME) {
+    if (is_checkmate(&ctx, ctx.side)) {
+      send_status("disconnect_from_room", "Disconnecting...", WAIT_DISCONNECT);
+      break;
+    }
+
     clear();
     int rows, cols;
     getmaxyx(stdscr, rows, cols);
@@ -45,31 +50,18 @@ void game() {
         mg_mgr_poll(&mgr, 100);
       }
       clear();
-    }
-    if (scene != GAME) break;
-
-    if (is_checkmate(&ctx, ctx.side)) {
-      send_status("disconnect_from_room", "Disconnecting...", WAIT_DISCONNECT);
-      break;
+      if (scene != GAME) break;
     }
 
     render(&ctx);
-    int ax, ay, bx, by;
-    if (!get_coordinates(&ax, &ay, &bx, &by)) {
+    struct Move move;
+    if (!get_move(&move)) {
       send_status("disconnect_from_room", "Disconnecting...", WAIT_DISCONNECT);
       break;
     }
 
-    struct Move move = {ax, ay, bx, by};
-    if (!check_coordinates_validity(move)) {
-      mvprintw(y, x, "The coordinates is invalid\n");
-      refresh();
-      getch();
-      continue;
-    }
-
-    struct Piece piece  = ctx.board[ay][ax];
-    struct Piece victim = ctx.board[by][bx];
+    struct Piece piece  = ctx.board[move.ay][move.ax];
+    struct Piece victim = ctx.board[move.by][move.bx];
     enum MoveType move_type;
 
     if (victim.color == ctx.turn && piece.type == KING && victim.type == ROOK) {
