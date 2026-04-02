@@ -140,14 +140,19 @@ bool get_move(struct Move *move) {
     is_first_rendering = false;
 
     if (ch == ENTER) {
+      int count        = sscanf(buffer, "%c%d-%c%d", &fromX, &fromY, &toX, &toY);
       struct Move temp = {fromX - 'a', 8 - fromY, toX - 'a', 8 - toY};
-      if (sscanf(buffer, "%c%d-%c%d", &fromX, &fromY, &toX, &toY) != 4 || !check_coordinates_validity(temp)) {
+
+      if (count != 4) {
         error = "Format must be x1y1-x2y2";
+      } else if (!check_coordinates_validity(temp)) {
+        error = "Coordinates isn't valid";
       } else {
         nodelay(stdscr, FALSE);
         *move = temp;
         break;
       }
+
       memset(buffer, 0, sizeof(buffer));
       curr = 0;
     }
