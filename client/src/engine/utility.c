@@ -1,7 +1,9 @@
 #include <ctype.h>
+#include <fcntl.h>
 #include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "../globals.h"
 #include "../types.h"
@@ -27,7 +29,6 @@ void initialize_context(struct Context *ctx) {
   ctx->turn               = WHITE;
   ctx->played_moves_count = 0;
   ctx->can_white_castle   = true;
-  ctx->can_black_castle   = true;
   initialize_board(ctx);
 }
 

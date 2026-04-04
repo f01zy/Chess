@@ -83,7 +83,10 @@ void game() {
       continue;
     }
 
-    if (move_type == MOVE_CASTLING || piece.type == KING || piece.type == ROOK) ctx.can_castle = false;
+    if (move_type == MOVE_CASTLING || piece.type == KING || piece.type == ROOK) {
+      ctx.turn == WHITE ? (ctx.can_white_castle = false) : (ctx.can_black_castle = false);
+    }
+
     send_move(move, move_type);
   }
 }
