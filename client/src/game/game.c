@@ -1,6 +1,5 @@
 #include <mongoose.h>
 #include <ncurses.h>
-#include <unistd.h>
 
 #include "../defines.h"
 #include "../engine/check.h"
@@ -25,11 +24,6 @@ void lobby() {
 
 void game() {
   while (scene == GAME) {
-    if (is_checkmate(&ctx, ctx.side)) {
-      send_status("disconnect_from_room", "Disconnecting...", WAIT_DISCONNECT);
-      break;
-    }
-
     clear();
     int rows, cols;
     getmaxyx(stdscr, rows, cols);
@@ -50,6 +44,11 @@ void game() {
         mg_mgr_poll(&mgr, 100);
       }
       clear();
+    }
+
+    if (is_checkmate(&ctx, ctx.turn)) {
+      send_status("disconnect_from_room", "Disconnecting...", WAIT_DISCONNECT);
+      break;
     }
 
     if (scene != GAME) break;
@@ -77,17 +76,14 @@ void game() {
       continue;
     }
 
-    if (is_protected(&ctx, move, move_type)) {
+    if (is_protected(&ctx, ctx.turn, move, move_type)) {
       mvprintw(y, x, "So you are in check\n");
       refresh();
       getch();
       continue;
     }
 
-    if (move_type == MOVE_CASTLING || piece.type == KING || piece.type == ROOK) {
-      ctx.turn == WHITE ? (ctx.can_white_castle = false) : (ctx.can_black_castle = false);
-    }
-
+    if (move_type == MOVE_CASTLING || piece.type == KING || piece.type == ROOK) ctx.can_castle = false;
     send_move(move, move_type);
   }
 }

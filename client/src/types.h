@@ -41,8 +41,7 @@ struct Context {
   struct Piece board[8][8];
   struct PlayedMove played_moves[MAX_MOVES];
   int played_moves_count;
-  bool can_white_castle;
-  bool can_black_castle;
+  bool can_castle;
 };
 
 #endif

@@ -4,17 +4,16 @@
 #include "../types.h"
 #include "validators.h"
 
-enum MoveType validate_pawn(struct Context *ctx, struct Move move) {
-  int dirY        = move.ay == move.by ? 0 : move.ay > move.by ? -1 : 1;
+enum MoveType validate_pawn(struct Context *ctx, enum Color side, struct Move move) {
+  int dirY        = move.ay > move.by ? -1 : 1;
   int moveX       = abs(move.ax - move.bx);
   int moveY       = abs(move.ay - move.by);
-  int max_advence = (move.ay == 1 || move.ay == 6) ? 2 : 1;
+  int max_advence = ((move.ay == 1 && side == BLACK) || (move.ay == 6 && side == WHITE)) ? 2 : 1;
 
-  struct Piece victim = ctx->board[move.by][move.bx];
-
-  if ((dirY == 1 && ctx->turn == WHITE) || (dirY == -1 && ctx->turn == BLACK)) return MOVE_INVALID;
+  if ((dirY == 1 && side == WHITE) || (dirY == -1 && side == BLACK)) return MOVE_INVALID;
   if (moveY > max_advence || moveY == 0 || moveX > 1) return MOVE_INVALID;
 
+  struct Piece victim    = ctx->board[move.by][move.bx];
   struct Piece nextPiece = ctx->board[move.ay + dirY][move.ax];
   if (moveY == 2 && (moveX == 1 || nextPiece.type != EMPTY)) return MOVE_INVALID;
 
@@ -26,6 +25,7 @@ enum MoveType validate_pawn(struct Context *ctx, struct Move move) {
     return MOVE_INVALID;
   }
 
+  if (move.by == 0 || move.by == 7) return MOVE_PROMOTION;
   return moveY == 2 ? MOVE_PAWN_DOUBLE : MOVE_NORMAL;
 };
 

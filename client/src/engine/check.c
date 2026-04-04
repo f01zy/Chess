@@ -3,8 +3,6 @@
 #include "validators.h"
 
 bool is_attacked(struct Context *ctx, enum Color side, int x, int y) {
-  if (x < 0 || x > 7 || y < 0 || y > 7) return false;
-
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
       struct Piece piece  = ctx->board[i][j];
@@ -52,13 +50,13 @@ bool is_checkmate(struct Context *ctx, enum Color side) {
   return true;
 }
 
-bool is_protected(struct Context *ctx, struct Move move, enum MoveType move_type) {
+bool is_protected(struct Context *ctx, enum Color side, struct Move move, enum MoveType move_type) {
   struct Piece piece  = ctx->board[move.ay][move.ax];
   struct Piece victim = ctx->board[move.by][move.bx];
 
   bool result = false;
   execute_move(ctx, move, move_type);
-  if (is_check(ctx, ctx->turn)) { result = true; }
+  if (is_check(ctx, side)) result = true;
   undo_move(ctx, move, move_type, piece, victim);
   return result;
 }
@@ -78,8 +76,8 @@ enum MoveType check_move_validity(struct Context *ctx, enum Color side, struct M
 
   // clang-format off
   switch (piece.type) {
+    case PAWN:   return validate_pawn  (ctx, side, move);
     case KING:   return validate_king  (ctx, move);
-    case PAWN:   return validate_pawn  (ctx, move);
     case QUEEN:  return validate_queen (ctx, move);
     case ROOK:   return validate_rook  (ctx, move);
     case BISHOP: return validate_bishop(ctx, move);
@@ -87,8 +85,6 @@ enum MoveType check_move_validity(struct Context *ctx, enum Color side, struct M
     default:     return MOVE_INVALID;
   }
   // clang-format on
-
-  return false;
 };
 
 enum MoveType check_castling(struct Context *ctx, enum Color side, struct Move move) {

@@ -2,6 +2,7 @@
 #include <string.h>
 #include <wchar.h>
 
+#include "../engine/check.h"
 #include "../types.h"
 #include "rendering.h"
 
@@ -57,21 +58,13 @@ void render_board(struct Context *ctx) {
   int rows, cols;
   getmaxyx(stdscr, rows, cols);
 
-  bool is_now_check     = false;
-  bool is_now_checkmate = false;
-  if (ctx->played_moves_count) {
-    struct PlayedMove previous_move = ctx->played_moves[ctx->played_moves_count - 1];
-    is_now_check                    = previous_move.is_check;
-    is_now_checkmate                = previous_move.is_checkmate;
-  }
-
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
       struct Piece piece = ctx->board[i][j];
       wchar_t ch         = ' ';
 
       int color = WHITE_ON_BLACK;
-      if (piece.type == KING && piece.color == ctx->side && is_now_check) { color = WHITE_ON_RED; }
+      if (piece.type == KING && is_check(ctx, piece.color)) color = WHITE_ON_RED;
 
       // clang-format off
       switch (piece.type) {

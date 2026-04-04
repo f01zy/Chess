@@ -74,10 +74,16 @@ void execute_move(struct Context *ctx, struct Move move, enum MoveType move_type
     ctx->board[move.by][rook_new_x] = victim;
     ctx->board[move.by][move.bx]    = (struct Piece){EMPTY, WHITE};
     ctx->board[move.ay][move.ax]    = (struct Piece){EMPTY, WHITE};
+  } else if (move_type == MOVE_EN_PASSANT) {
+    ctx->board[move.by][move.bx] = piece;
+    ctx->board[move.ay][move.ax] = (struct Piece){EMPTY, WHITE};
+    ctx->board[move.ay][move.bx] = (struct Piece){EMPTY, WHITE};
+  } else if (move_type == MOVE_PROMOTION) {
+    ctx->board[move.by][move.bx] = (struct Piece){QUEEN, ctx->turn};
+    ctx->board[move.ay][move.ax] = (struct Piece){EMPTY, WHITE};
   } else {
     ctx->board[move.by][move.bx] = piece;
     ctx->board[move.ay][move.ax] = (struct Piece){EMPTY, WHITE};
-    if (move_type == MOVE_EN_PASSANT) ctx->board[move.ay][move.bx] = (struct Piece){EMPTY, WHITE};
   }
 }
 

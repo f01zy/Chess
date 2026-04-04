@@ -3,7 +3,7 @@
 
 #include "../types.h"
 
-enum MoveType validate_pawn(struct Context *ctx, struct Move move);
+enum MoveType validate_pawn(struct Context *ctx, enum Color side, struct Move move);
 enum MoveType validate_king(struct Context *ctx, struct Move move);
 enum MoveType validate_queen(struct Context *ctx, struct Move move);
 enum MoveType validate_rook(struct Context *ctx, struct Move move);
