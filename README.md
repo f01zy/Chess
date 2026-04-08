@@ -21,7 +21,7 @@ cmake ..
 cmake --build .
 ```
 
-If you want to run server locally, you need to install [bun](https://bun.com/):
+Then copy `servers.txt` to build folder and change it, if you have your own server. If you want to run server locally, you need to install [bun](https://bun.com/):
 
 ```bash
 cd server

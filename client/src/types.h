@@ -7,7 +7,7 @@
 enum PieceType { EMPTY, PAWN, KING, QUEEN, ROOK, BISHOP, KNIGHT };
 enum Color { WHITE, BLACK };
 enum MoveType { MOVE_NORMAL, MOVE_PAWN_DOUBLE, MOVE_EN_PASSANT, MOVE_CASTLING, MOVE_PROMOTION, MOVE_INVALID };
-enum Scene { EXIT, LOBBY, SEARCHING, GAME };
+enum Scene { EXIT, CHOOSE_SERVER, LOBBY, SEARCHING, GAME };
 
 struct Piece {
   enum PieceType type;

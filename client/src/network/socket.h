@@ -4,7 +4,7 @@
 #include "../types.h"
 #include <mongoose.h>
 
-void initialize_mongoose();
+void initialize_mongoose(char *server, int port);
 void send_move(struct Move move, enum MoveType move_type);
 void send_status(char *status, char *message, int mask);
 void waiting_message(char *message, int mask);

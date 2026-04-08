@@ -1,6 +1,7 @@
 #include <cJSON.h>
 #include <mongoose.h>
 #include <ncurses.h>
+#include <stdio.h>
 
 #include "../defines.h"
 #include "../engine/utility.h"
@@ -53,10 +54,12 @@ static void handler(struct mg_connection *c, int ev, void *ev_data) {
   }
 }
 
-void initialize_mongoose() {
+void initialize_mongoose(char *server, int port) {
+  char buffer[SERVERS_BUFFER_MAX];
+  snprintf(buffer, sizeof(buffer), "ws://%s:%d", server, port);
   mg_log_set(MG_LL_NONE);
   mg_mgr_init(&mgr);
-  c        = mg_ws_connect(&mgr, SERVER_URL, handler, NULL, NULL);
+  c        = mg_ws_connect(&mgr, buffer, handler, NULL, NULL);
   pending |= WAIT_CONNECT;
   waiting_message("Connecting...", WAIT_CONNECT);
 }

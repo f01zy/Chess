@@ -4,7 +4,6 @@
 #include "engine/utility.h"
 #include "game/game.h"
 #include "globals.h"
-#include "network/socket.h"
 #include "types.h"
 
 int main() {
@@ -14,15 +13,15 @@ int main() {
   cbreak();
   keypad(stdscr, TRUE);
   initalize_colors();
-  initialize_mongoose();
 
   while (scene != EXIT) {
     // clang-format off
     switch (scene) {
-      case LOBBY:     lobby();     break;
-      case SEARCHING: searching(); break;
-      case GAME:      game();      break;
-      case EXIT:                   break;
+      case CHOOSE_SERVER: choose_server(); break;
+      case LOBBY:         lobby();         break;
+      case SEARCHING:     searching();     break;
+      case GAME:          game();          break;
+      case EXIT:                           break;
     }
     // clang-format on
   }

@@ -1,5 +1,7 @@
+#include <fcntl.h>
 #include <mongoose.h>
 #include <ncurses.h>
+#include <unistd.h>
 
 #include "../defines.h"
 #include "../engine/check.h"
@@ -10,6 +12,31 @@
 #include "game.h"
 #include "rendering.h"
 #include "ui.h"
+
+void choose_server() {
+  FILE *file = fopen("servers.txt", "r");
+  if (!file) {
+    endwin();
+    printf("File servers.txt not found\n");
+    exit(1);
+  }
+
+  char *servers[MAX_SERVERS];
+  char buffer[SERVERS_BUFFER_MAX];
+  int i = 0;
+  while (i < MAX_MENU_OPTIONS && fgets(buffer, sizeof(buffer), file)) {
+    buffer[strcspn(buffer, "\n")] = '\0';
+    servers[i]                    = malloc(strlen(buffer) + 1);
+    if (servers[i] != NULL) {
+      strcpy(servers[i], buffer);
+      i++;
+    }
+  }
+
+  int id = menu(servers, i);
+  initialize_mongoose(servers[id], 3000);
+  scene = LOBBY;
+}
 
 void searching() { send_status("searching", "Searching for an opponent...", WAIT_SEARCHING); }
 
